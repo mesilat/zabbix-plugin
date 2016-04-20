@@ -30,7 +30,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.bouncycastle.util.encoders.Base64;
 
-public class PasswordEncryption {
+public class PasswordEncryption2 {
 
     private static final String KEY_FACTORY = "PBKDF2WithHmacSHA1";
     private static final String CIPHER = "AES/CBC/PKCS5Padding";

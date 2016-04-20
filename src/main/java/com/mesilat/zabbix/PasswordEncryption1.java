@@ -11,86 +11,79 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.KeySpec;
-import java.util.Arrays;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.PBEParameterSpec;
 import org.bouncycastle.util.encoders.Base64;
 
-public class PasswordEncryption {
+public class PasswordEncryption1 {
 
-    private static final String KEY_FACTORY = "PBKDF2WithHmacSHA1";
-    private static final String CIPHER = "AES/CBC/PKCS5Padding";
-    private static final String ALGORITHM = "AES";
+    private static final String KEY_FACTORY = "PBEwithSHA1AndDESede";
+    private static final String CIPHER = KEY_FACTORY;
 
     public static byte[] encrypt(byte[] text, String password) throws
             NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
             InvalidKeyException, InvalidParameterSpecException, IllegalBlockSizeException,
-            BadPaddingException, UnsupportedEncodingException {
-        return encrypt(text, password, "eH9!".getBytes());
+            BadPaddingException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
+        return encrypt(text, password, "!eH9!>>+".getBytes());
     }
 
     public static byte[] encrypt(byte[] text, String password, byte[] salt) throws
             NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
             InvalidKeyException, InvalidParameterSpecException, IllegalBlockSizeException,
-            BadPaddingException, UnsupportedEncodingException {
+            BadPaddingException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
+        
         SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_FACTORY);
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
-        SecretKey tmp = factory.generateSecret(spec);
-        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), ALGORITHM);
+        KeySpec spec = new PBEKeySpec(password.toCharArray());
+        SecretKey secret = factory.generateSecret(spec);
 
-        /* Encrypt the message. */
         Cipher cipher = Cipher.getInstance(CIPHER);
-        cipher.init(Cipher.ENCRYPT_MODE, secret);
-        AlgorithmParameters params = cipher.getParameters();
-        byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
-
-        return ArrayUtil.merge(iv, cipher.doFinal(text));
+        PBEParameterSpec pbeParamSpec = new PBEParameterSpec(salt, 1);
+        cipher.init(Cipher.ENCRYPT_MODE, secret, pbeParamSpec);
+ 
+        return cipher.doFinal(text);
     }
 
     public static byte[] decrypt(byte[] enc, String password) throws
             NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
             InvalidKeyException, InvalidParameterSpecException, IllegalBlockSizeException,
             BadPaddingException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
-        return decrypt(enc, password, "eH9!".getBytes());
+        return decrypt(enc, password, "!eH9!>>+".getBytes());
     }
 
     public static byte[] decrypt(byte[] enc, String password, byte[] salt) throws
             NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException,
             InvalidKeyException, InvalidParameterSpecException, IllegalBlockSizeException,
             BadPaddingException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
+        
         SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_FACTORY);
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
-        SecretKey tmp = factory.generateSecret(spec);
-        SecretKey secret = new SecretKeySpec(tmp.getEncoded(), ALGORITHM);
+        KeySpec spec = new PBEKeySpec(password.toCharArray());
+        SecretKey secret = factory.generateSecret(spec);
 
-        /* Decrypt the message. */
         Cipher cipher = Cipher.getInstance(CIPHER);
-        byte[] iv = Arrays.copyOfRange(enc, 0, 16);
-        cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
+        PBEParameterSpec pbeParamSpec = new PBEParameterSpec(salt, 1);
+        cipher.init(Cipher.DECRYPT_MODE, secret, pbeParamSpec);
 
-        return cipher.doFinal(Arrays.copyOfRange(enc, 16, enc.length));
+        return cipher.doFinal(enc);
     }
 
     public static String scramble(String text) throws Exception {
-        return new String(Base64.encode(encrypt(text.getBytes("UTF8"), KEY_FACTORY + CIPHER + ALGORITHM)));
+        return new String(Base64.encode(encrypt(text.getBytes("UTF8"), KEY_FACTORY + CIPHER)));
     }
 
     public static String unscramble(String text) throws Exception {
-        return new String(decrypt(Base64.decode(text), KEY_FACTORY + CIPHER + ALGORITHM), "UTF8");
+        return new String(decrypt(Base64.decode(text), KEY_FACTORY + CIPHER), "UTF8");
     }
 
     public static void copy(InputStream in, OutputStream out) throws IOException {

@@ -82,7 +82,7 @@ public class ZabbixGraphMacro extends BaseMacro implements Macro {
         final List<NameValuePair> nvps = new ArrayList<NameValuePair>();
         nvps.add(new BasicNameValuePair("name", config.getUsername()));
         try {
-            nvps.add(new BasicNameValuePair("password", PasswordEncryption.unscramble(config.getPassword())));
+            nvps.add(new BasicNameValuePair("password", PasswordEncryption1.unscramble(config.getPassword())));
         } catch(Exception ex) {
             LOGGER.warn("Failed to unscramble password", ex);
             nvps.add(new BasicNameValuePair("password", config.getPassword()));

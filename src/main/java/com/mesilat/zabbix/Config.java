@@ -61,7 +61,7 @@ public class Config {
 
     protected boolean isPasswordObfuscated() {
         try {
-            PasswordEncryption.unscramble(password);
+            PasswordEncryption1.unscramble(password);
             return true;
         } catch(Exception ignore) {
             return false;
@@ -69,7 +69,7 @@ public class Config {
     }
     
     protected void obfuscatePassword() throws Exception {
-        password = PasswordEncryption.scramble(password);
+        password = PasswordEncryption1.scramble(password);
     }
 
     public Config() {
