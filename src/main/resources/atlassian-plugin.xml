@@ -1,0 +1,228 @@
+<atlassian-plugin key="${atlassian.plugin.key}" name="Zabbix Plugin" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="https://github.com/mesilat/zabbix-plugin" />
+        <param name="plugin-icon">images/pluginIcon.png</param>
+        <param name="plugin-logo">images/pluginLogo.png</param>
+        <param name="configure.url">/plugins/zabbix-plugin/globalsettings.action</param>
+        <param name="atlassian-licensing-enabled">true</param>
+    </plugin-info>
+
+    <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="loginUriProvider" interface="com.atlassian.sal.api.auth.LoginUriProvider">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="renderer" interface="com.atlassian.templaterenderer.velocity.one.six.VelocityTemplateRenderer">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="transactionTemplate" interface="com.atlassian.sal.api.transaction.TransactionTemplate">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="i18nResolver" interface="com.atlassian.sal.api.message.I18nResolver">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="pluginLicenseManager" interface="com.atlassian.upm.api.license.PluginLicenseManager">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="templateRenderer" interface="com.atlassian.confluence.renderer.template.TemplateRenderer">
+        <description>Imported system component</description>
+    </component-import>
+    <component-import key="activeObjects" interface="com.atlassian.activeobjects.external.ActiveObjects">
+        <description>Imported system component</description>
+    </component-import>
+
+    <ao key="ao-module" name="Active Objects">
+        <entity>com.mesilat.zabbix.ZabbixConnectionDescriptor</entity>
+        <entity>com.mesilat.zabbix.ZabbixConnectionGrant</entity>
+        <entity>com.mesilat.zabbix.ZabbixHostDefault</entity>
+        <entity>com.mesilat.format.ItemFormat</entity>
+    </ao>
+
+    <component key="tempFileService" name="Temporary File Service" class="com.mesilat.zabbix.TempFileService">
+        <description>Performs temporary file cleanup</description>
+    </component>
+    <component key="tokenService" name="Host Authorization Service" class="com.mesilat.zabbix.TokenService">
+        <description>Performs user authorization for REST calls for Zabbix triggers</description>
+    </component>
+    <component key="legacyConfigService" name="Legacy Config Service" class="com.mesilat.zabbix.LegacyConfigService">
+        <description>Imports legacy configuration on plugin start</description>
+    </component>
+
+    <resource type="i18n" name="i18n" location="i18n/zabbix-plugin"/>
+    <resource type="download" name="images/" location="/images"/>
+    
+    <web-resource key="resources" name="Zabbix Plugin Config Resources">
+        <description>Zabbix Plugin configuration web resources</description>
+        <context>zabbix-plugin</context>
+        <context>macro-browser</context>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>        
+        <dependency>confluence.editor.actions:editor-macro-browser</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-spinner</dependency>
+        <resource type="download" name="zabbix-plugin.js" location="js/zabbix-plugin.js" />
+        <resource type="download" name="zabbix-plugin.css" location="css/zabbix-plugin.css" />
+        <resource type="download" name="macros.soy.js" location="templates/macros.soy"/>
+
+        <resource type="download" name="macros.js"  location="/js/macros.js" />
+        <resource type="download" name="macros.css" location="/css/macros.css" />
+
+        <transformation extension="soy">
+            <transformer key="soyTransformer">
+                <functions>com.atlassian.confluence.plugins.soy:soy-core-functions</functions>
+            </transformer>
+        </transformation>
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+    </web-resource>
+
+    <web-resource key="macro-resources-css" name="Macro CSS Resources">
+        <resource type="download" name="zabbix-plugin.css" location="css/zabbix-plugin.css" />
+    </web-resource>
+
+    <web-resource key="svg-map" name="Web Resources for SVG Map">
+        <resource type="download" name="svg-map.js" location="/js/svg-map.js" />
+        <context>main</context>
+    </web-resource>
+
+    <web-resource key="macro-resources" name="Macro Resources">
+        <transformation extension="soy">
+            <transformer key="soyTransformer">
+                <functions>com.atlassian.confluence.plugins.soy:soy-core-functions</functions>
+            </transformer>
+        </transformation>
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+
+        <resource type="download" name="macros.soy.js" location="templates/macros.soy"/>
+
+        <!--context>preview</context-->
+        <context>viewcontent</context>
+    </web-resource>
+
+    <!-- servlet-filter class="com.mesilat.util.DemoAuthFilter" key="demo-auth" location="before-login" name="Demo Auth Filter" weight="1">
+        <description>Demo Auth Filter</description>
+        <url-pattern>/rest/zabbix-plugin/1.0/image</url-pattern>
+    </servlet-filter -->
+
+    <rest key="rest" path="/zabbix-plugin" version="1.0" name="Rest Resources">
+        <description>Provides REST resources for Zabbix Plugin</description>
+    </rest>
+
+﻿   <xhtml-macro name="zabbix-graph" class="com.mesilat.zabbix.ZabbixGraphMacro2" key="zabbix-graph" state="enabled"
+        icon="/download/resources/com.mesilat.zabbix-plugin/images/pluginLogo.png">
+    ﻿   <resource type="i18n" name="i18n" location="/i18n/zabbix-plugin"/>
+﻿       <category name="reporting"/>
+        <category name="external-content"/>
+        <description key="com.mesilat.zabbix-plugin.zabbix-graph.desc"></description>
+        <parameters>
+            <parameter name="server" type="string"/>
+            <parameter name="host"   type="string"/>
+            <parameter name="graph"  type="string"/>
+            <parameter name="period" type="string" default="3600"/>
+            <parameter name="width"  type="string" default="1000"/>
+            <parameter name="height" type="string" default="400"/>
+            <parameter name="synchronous" type="boolean" default="false"/>
+        </parameters>
+    </xhtml-macro>
+
+
+
+﻿   <xhtml-macro name="zabbix-item" class="com.mesilat.zabbix.ZabbixItemMacro2" key="zabbix-item" state="enabled"
+        icon="/download/resources/com.mesilat.zabbix-plugin/images/pluginLogo.png">
+﻿       <category name="reporting"/>
+        <category name="external-content"/>
+        <description key="com.mesilat.zabbix-plugin.zabbix-item.desc"></description>
+        <parameters>
+            <parameter name="server" type="string"/>
+            <parameter name="host"   type="string"/>
+            <parameter name="item"   type="string"/>
+            <parameter name="format" type="string"/>
+        </parameters>
+    </xhtml-macro>
+
+﻿   <xhtml-macro name="zabbix-triggers" class="com.mesilat.zabbix.ZabbixTriggerMacro" key="zabbix-triggers" state="enabled"
+        icon="/download/resources/com.mesilat.zabbix-plugin/images/pluginLogo.png">
+﻿       <category name="reporting"/>
+        <category name="external-content"/>
+        <description key="com.mesilat.zabbix-plugin.zabbix-triggers.desc"></description>
+        <parameters>
+            <parameter name="server" type="string"/>
+            <parameter name="host" type="string"/>
+        </parameters>
+    </xhtml-macro>
+
+﻿   <xhtml-macro name="zabbix-map" class="com.mesilat.zabbix.ZabbixMapMacro2" key="zabbix-map" state="enabled"
+        icon="/download/resources/com.mesilat.zabbix-plugin/images/pluginLogo.png">
+    ﻿   <resource type="i18n" name="i18n" location="/i18n/zabbix-plugin"/>
+﻿       <category name="reporting"/>
+        <category name="external-content"/>
+        <description key="com.mesilat.zabbix-plugin.zabbix-map.desc"></description>
+        <parameters>
+            <parameter name="server" type="string"/>
+            <parameter name="map"    type="string"/>
+            <parameter name="severity" type="enum">
+                <value name="Not classified"/>
+                <value name="Information"/>
+                <value name="Warning"/>
+                <value name="Average"/>
+                <value name="High"/>
+                <value name="Disaster"/>
+            </parameter>
+        </parameters>
+    </xhtml-macro>
+
+﻿   <xhtml-macro name="zabbix-host-selector" class="com.mesilat.zabbix.ZabbixHostDefaultMacro" key="zabbix-host-selector" state="enabled"
+        icon="/download/resources/com.mesilat.zabbix-plugin/images/pluginLogo.png">
+    ﻿   <resource type="i18n" name="i18n" location="/i18n/zabbix-plugin"/>
+﻿       <category name="reporting"/>
+        <category name="external-content"/>
+        <description key="com.mesilat.zabbix-plugin.zabbix-host-selector.desc"></description>
+        <parameters>
+            <parameter name="server" type="string"/>
+            <parameter name="host"   type="string"/>
+        </parameters>
+    </xhtml-macro>
+
+
+    <web-item key="user-settings" name="User Settings" section="system.settings.edit/yoursettings" weight="99">
+        <label>Zabbix Plugin</label>
+        <link>/plugins/zabbix-plugin/zabbix-settings.action</link>
+    </web-item>
+
+    <xwork key="zabbix-actions" name="Zabbix Plugin Actions">
+        <package name="zabbix-plugin" extends="default" namespace="/plugins/zabbix-plugin">
+            <default-interceptor-ref name="validatingStack"/>
+            <action name="zabbix-settings" class="com.mesilat.zabbix.UserSettingsAction">
+                <result name="success" type="velocity">/templates/zabbix-settings.vm</result>
+            </action>
+            <action name="globalsettings" class="com.mesilat.zabbix.GlobalSettingsAction">
+                <result name="success" type="velocity">/templates/globalsettings.vm</result>
+            </action>
+        </package>
+    </xwork>
+
+    <web-resource key="user-settings-resources" name="User Settings Resources">
+        <transformation extension="soy">
+            <transformer key="soyTransformer">
+                <functions>com.atlassian.confluence.plugins.soy:soy-core-functions</functions>
+            </transformer>
+        </transformation>
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>confluence.web.resources:shared-templates</dependency>
+        <dependency>com.atlassian.confluence.plugins.confluence-ui-components:user-group-select2</dependency>
+        <resource type="download" name="settings.js"     location="/js/settings.js"/>
+        <resource type="download" name="settings.css"    location="/css/settings.css"/>
+        <resource type="download" name="settings.soy.js" location="/templates/settings.soy"/>
+        <context>zabbix-plugin-settings</context>
+    </web-resource>
+</atlassian-plugin>
