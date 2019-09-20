@@ -130,9 +130,16 @@ public class ZabbixTriggerResource extends ZabbixResourceBase {
                     Thread thread = new Thread(() -> {
                         try {
                             ZabbixClient client = getClient(conn);
-                            List<ZabbixTrigger> t = client.getTriggersForHost(host, new DateFormatterImpl(dateFormatter));
-                            synchronized(triggers){
-                                triggers.get(host).addAll(t);
+                            if ("__ALL__".equals(host)){
+                                List<ZabbixTrigger> t = client.getTriggers(new DateFormatterImpl(dateFormatter));
+                                synchronized(triggers){
+                                    triggers.get(host).addAll(t);
+                                }
+                            } else {
+                                List<ZabbixTrigger> t = client.getTriggersForHost(host, new DateFormatterImpl(dateFormatter));
+                                synchronized(triggers){
+                                    triggers.get(host).addAll(t);
+                                }
                             }
                         } catch (ZabbixResourceException | ZabbixClientException ex) {
                             synchronized(errors){
@@ -177,11 +184,18 @@ public class ZabbixTriggerResource extends ZabbixResourceBase {
     }
     private JSONObject toObject(ZabbixTrigger trigger, DateFormatter dateFormatter) throws JSONException {
         JSONObject obj = new JSONObject();
-        obj.put("id", trigger.getTriggerId());
+        obj.put("triggerId", trigger.getTriggerId());
         obj.put("description", trigger.getDescription());
+        obj.put("priority", trigger.getPriority().toString());
         obj.put("priorityUpperCase", StringUtil.toFirstCapital(trigger.getPriority().toString()));
         obj.put("iconClass", trigger.getPriority().toIconClass());
         obj.put("timestamp", dateFormatter.format(trigger.getLastChange()));
+        obj.put("hostId", trigger.getHostId());
+        obj.put("host", trigger.getHost());
+        obj.put("hostName", trigger.getHostName());
+        obj.put("groupId", trigger.getGroupId());
+        obj.put("groupName", trigger.getGroupName());
+        obj.put("eventId", trigger.getEventId());
         return obj;
     }
 

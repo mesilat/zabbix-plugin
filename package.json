@@ -1,0 +1,30 @@
+{
+  "name": "zabbix-plugin",
+  "version": "1.1.0",
+  "devDependencies": {
+    "atlassian-webresource-webpack-plugin": "3",
+    "css-loader": "^1.0.0",
+    "file-loader": "^1.1.11",
+    "jquery": "^3.3.1",
+    "less": "^3.8.0",
+    "less-loader": "^4.1.0",
+    "lodash": "^4.17.10",
+    "style-loader": "^0.21.0",
+    "webpack": "^4.16.3",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.5",
+    "webpack-merge": "^4.1.4"
+  },
+  "scripts": {
+    "build": "webpack --config src/main/frontend/build/webpack.config.js",
+    "mvnpackage": "atlas-mvn package -DskipTests -T 4",
+    "mvnpackage:watch": "yarn mvnpackage -P frontend-watch",
+    "update": "yarn mvnpackage",
+    "update:watch": "yarn mvnpackage:watch",
+    "watch:prepare": "yarn build --env watch:prepare",
+    "watch": "yarn update:watch && webpack-dev-server --config src/main/frontend/build/webpack.config.js --env watch"
+  },
+  "dependencies": {
+    "suggestions": "^1.6.0"
+  }
+}

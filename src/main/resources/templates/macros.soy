@@ -1,0 +1,397 @@
+{namespace Mesilat.Zabbix.Templates}
+
+/**
+* Zabbix Graph Template (async)
+* @param fileName
+* @param title
+* @param licensed
+*/
+{template .zabbixGraph}
+<div class="wiki-content zabbix zabbix-graph{if not $licensed} zabbix-plugin-not-licensed{/if}">
+<pre>
+<img src="{contextPath()}/rest/zabbix-plugin/1.0/image?file={$fileName|noAutoescape}" title="{$title}">
+</img>
+</pre>
+</div>
+{/template}
+
+
+/**
+* Zabbix Graph Template (sync)
+* @param imgBase64
+* @param title
+* @param licensed
+*/
+{template .zabbixGraphSync}
+<div class="wiki-content zabbix zabbix-graph{if not $licensed} zabbix-plugin-not-licensed{/if}">
+<pre>
+<img src="data:image/png;base64,{$imgBase64|noAutoescape}" title="{$title}">
+</img>
+</pre>
+</div>
+{/template}
+
+
+/**
+* Zabbix Graph Template (async)
+* @param server
+* @param host
+* @param graph
+* @param period
+* @param width
+* @param height
+* @param licensed
+*/
+{template .zabbixGraphAsync}
+<div class="wiki-content zabbix zabbix-graph{if not $licensed} zabbix-plugin-not-licensed{/if}"
+    data-server="{$server}"
+    data-host="{$host}"
+    data-graph="{$graph}"
+    data-period="{$period}"
+    data-width="{$width}"
+    data-height="{$height}"
+>
+    <pre>{getText('com.mesilat.zabbix-plugin.zabbix-graph.label')}: {getText('com.mesilat.zabbix-plugin.loading')} <span/></pre>
+</div>
+{/template}
+
+
+/**
+* Zabbix Graph Legacy Template (async)
+* @param graphid
+* @param period
+* @param width
+* @param height
+* @param licensed
+*/
+{template .zabbixGraphLegacyAsync}
+<div class="wiki-content zabbix zabbix-graph{if not $licensed} zabbix-plugin-not-licensed{/if}"
+    data-graph-id="{$graphid}"
+    data-period="{$period}"
+    data-width="{$width}"
+    data-height="{$height}"
+>
+    <pre>{getText('com.mesilat.zabbix-plugin.zabbix-graph.label')}: {getText('com.mesilat.zabbix-plugin.loading')} <span/></pre>
+</div>
+{/template}
+
+
+/**
+* Zabbix Item Template (async)
+* @param itemId
+* @param format
+* @param licensed
+* @param token
+*/
+{template .zabbixItem}
+<span class="zabbix zabbix-item{if not $licensed} zabbix-plugin-not-licensed{/if}" item-id="{$itemId}" format="{$format}" token="{$token}">
+<div class="button-spinner"></div>
+</span>
+{/template}
+
+
+/**
+* Zabbix Item Template v2 (async)
+* @param server
+* @param host
+* @param item
+* @param format
+* @param licensed
+* @param token
+*/
+{template .zabbixItem2}
+<span class="zabbix zabbix-item2{if not $licensed} zabbix-plugin-not-licensed{/if}" server="{$server}" host="{$host}" item="{$item}" format="{$format}" token="{$token}">
+<div class="button-spinner"></div>
+</span>
+{/template}
+
+
+/**
+* Zabbix Item Template (sync)
+* @param itemText
+*/
+{template .zabbixItemSync}
+<div class="wiki-content">
+<p>{$itemText|noAutoescape}</p>
+</div>
+{/template}
+
+
+/**
+* Zabbix Triggers Template (async)
+* @param hostId
+* @param licensed
+* @param token
+*/
+{template .zabbixTriggers}
+<div class="zabbix-triggers{if not $licensed} zabbix-plugin-not-licensed{/if}" host-id="{$hostId}" token="{$token}">
+<div class="button-spinner"></div>
+</div>
+{/template}
+
+
+/**
+* Zabbix Triggers Template (async)
+* @param server
+* @param host
+* @param licensed
+* @param token
+*/
+{template .zabbixTriggers2}
+<div class="zabbix-triggers2{if not $licensed} zabbix-plugin-not-licensed{/if}" server="{$server}" host="{$host}" token="{$token}">
+<div class="button-spinner"></div>
+</div>
+{/template}
+
+
+/**
+* Zabbix No Active Triggers Template
+*/
+{template .zabbixAllGood}
+<div class="aui-message aui-message-success">
+<p class="title"><strong>{getText('com.mesilat.zabbix-plugin.allgood')}</strong></p>
+<p>{getText('com.mesilat.zabbix-plugin.no-triggers')}</p>
+</div>
+{/template}
+
+
+/**
+* Zabbix Triggers Template (sync)
+* @param triggers
+*/
+{template .zabbixTriggersSync}
+<div class="wiki-content">
+<table class="aui">
+<tbody>
+<thead>
+<tr>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.description')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.priority')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.lastChange')}</th>
+</tr>
+</thead>
+<tbody>
+    {foreach $trigger in $triggers}
+        {call .zabbixTriggerLine}
+            {param trigger: $trigger/}
+        {/call}
+    {/foreach}
+</tbody>
+</table>
+</div>
+{/template}
+
+
+/**
+* Zabbix Trigger Line Template
+* @param trigger
+*/
+{template .zabbixTriggerLine}
+<tr class="zabbix-trigger-{$trigger.priority}" data-trigger-id="{$trigger.triggerId}">
+<td class="zabbix zabbix-trigger"><span class="{$trigger.iconClass} zabbix-icon"></span> <a href="javascript:0;">{$trigger.description}</a></td>
+<td class="zabbix">{$trigger.priorityUpperCase}</td>
+<td class="zabbix">{$trigger.timestamp}</td>
+</tr>
+{/template}
+
+
+/**
+* Zabbix Triggers Template (all hosts)
+* @param triggers
+*/
+{template .zabbixTriggersAll}
+<table class="aui">
+<tbody>
+<thead>
+<tr>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.description')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.host')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.group')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.priority')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.lastChange')}</th>
+</tr>
+</thead>
+<tbody>
+    {foreach $trigger in $triggers}
+        {call .zabbixTriggerAllLine}
+            {param trigger: $trigger/}
+        {/call}
+    {/foreach}
+</tbody>
+</table>
+{/template}
+
+
+/**
+* Zabbix Trigger Line Template (all hosts)
+* @param trigger
+*/
+{template .zabbixTriggerAllLine}
+<tr class="zabbix-trigger-{$trigger.priority}" data-trigger-id="{$trigger.triggerId}">
+    <td class="zabbix zabbix-trigger"><span class="{$trigger.iconClass} zabbix-icon"></span> <a href="javascript:0;">{$trigger.description}</a></td>
+    <td class="zabbix zabbix-trigger-host">{if isNonnull($trigger.hostName)}{$trigger.hostName}{/if}</td>
+    <td class="zabbix zabbix-trigger-group">{if isNonnull($trigger.groupName)}{$trigger.groupName}{/if}</td>
+    <td class="zabbix">{$trigger.priorityUpperCase}</td>
+    <td class="zabbix">{$trigger.timestamp}</td>
+</tr>
+{/template}
+
+
+/**
+* Zabbix Error Template
+* @param errorText
+*/
+{template .error}
+<div class="aui-message aui-message-error">
+<p class="title">
+<strong>{getText('com.mesilat.zabbix-plugin.error')}</strong>
+</p>
+<p>{$errorText}</p>
+</div>
+{/template}
+
+
+/**
+* Zabbix Item Not Found Template
+*/
+{template .errorItemNotFound}
+<div class="wiki-content">
+<p>
+<img src="{contextPath()}/download/resources/com.mesilat.zabbix-plugin/images/pluginIconErr.png"></img>
+{getText('com.mesilat.zabbix-plugin.error.item-not-found')}
+</p>
+</div>
+{/template}
+
+
+/**
+* Error Template
+* @param title
+* @param text
+*/
+{template .blockError}
+<div class="aui-message aui-message-error">
+<p class="title">
+<strong>{$title}</strong>
+</p>
+<p>{$text}</p>
+</div>
+{/template}
+
+
+/**
+* Warning Template
+* @param title
+* @param text
+*/
+{template .blockWarning}
+<div class="aui-message aui-message-warning">
+<p class="title">
+<strong>{$title}</strong>
+</p>
+<p>{$text}</p>
+</div>
+{/template}
+
+
+/**
+* Success Template
+* @param title
+* @param text
+*/
+{template .blockSuccess}
+<div class="aui-message aui-message-success">
+<p class="title">
+<strong>{$title}</strong>
+</p>
+<p>{$text}</p>
+</div>
+{/template}
+
+
+
+/**
+* Zabbix Map Template
+* @param server
+* @param map
+* @param severity
+* @param licensed
+*/
+{template .zabbixMap}
+<div class="wiki-content zabbix zabbix-map{if not $licensed} zabbix-plugin-not-licensed{/if}"
+    data-server="{$server}"
+    data-map="{$map}"
+    data-severity="{$severity}"
+>
+    <pre>{getText('com.mesilat.zabbix-plugin.zabbix-map.label')}: {getText('com.mesilat.zabbix-plugin.loading')} <span/></pre>
+</div>
+{/template}
+
+/**
+* Zabbix SVG Map Template
+* @param server
+* @param map
+* @param severity
+* @param licensed
+*/
+{template .zabbixSvgMap}
+<div class="wiki-content zabbix zabbix-svg-map{if not $licensed} zabbix-plugin-not-licensed{/if}"
+    data-server="{$server}"
+    data-map="{$map}"
+    data-severity="{$severity}"
+>
+    <pre>{getText('com.mesilat.zabbix-plugin.zabbix-map.label')}: {getText('com.mesilat.zabbix-plugin.loading')} <span/></pre>
+</div>
+{/template}
+
+/**
+* Zabbix Map Template (sync)
+* @param imgBase64
+* @param altText
+* @param licensed
+*/
+{template .zabbixMapSync}
+<div class="wiki-content zabbix zabbix-map{if not $licensed} zabbix-plugin-not-licensed{/if}">
+<pre>
+<img src="data:image/png;base64,{$imgBase64|noAutoescape}" alt="{$altText}">
+</img>
+</pre>
+</div>
+{/template}
+
+
+
+/**
+* Zabbix Not Licensed template
+*/
+{template .notLicensedWarning}
+<div class="zabbix-plugin-not-licensed-warning">{getText('com.mesilat.zabbix-plugin.warning.no-license')}</div>
+{/template}
+
+
+/**
+* Zabbix Host Default Template
+* @param server
+* @param host
+* @param licensed
+*/
+{template .zabbixHostDefault}
+<span class="zabbix-host-selector{if not $licensed} zabbix-plugin-not-licensed{/if}" server="{$server}" host="{$host}">
+{$host}
+</span>
+{/template}
+
+
+/**
+* Zabbix Map context dialog
+* @param urls
+*/
+{template .zabbixMapContext}
+<ul class="zabbix-map-context-dialog aui-nav">
+    {foreach $link in $urls}
+        <li>
+            <a href="{$link.url}" class="aui-nav-link" target="_blank">{$link.label}</a>
+        </li>
+    {/foreach}
+</ul>
+{/template}

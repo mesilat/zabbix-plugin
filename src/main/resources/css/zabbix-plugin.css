@@ -1,0 +1,14 @@
+.zabbix-graph-list
+{
+    width:           360px;
+    height:          240px;
+    border:          1px solid #cccccc;
+    border-radius:   3.01px;
+    -moz-box-sizing: border-box;
+    overflow:        scroll;
+    overflow-x:      hidden;
+}
+
+.zabbix-icon:before {
+    position: static;
+}

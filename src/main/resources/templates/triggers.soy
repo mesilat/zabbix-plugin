@@ -1,0 +1,93 @@
+{namespace Mesilat.Zabbix.TriggersTemplates}
+
+/**
+* Zabbix No Active Triggers Template
+*/
+{template .zabbixAllGood}
+<div class="aui-message aui-message-success">
+<p class="title"><strong>{getText('com.mesilat.zabbix-plugin.allgood')}</strong></p>
+<p>{getText('com.mesilat.zabbix-plugin.no-triggers')}</p>
+</div>
+{/template}
+
+
+/**
+* Zabbix Triggers Template (sync)
+* @param triggers
+*/
+{template .zabbixTriggersSync}
+<div class="wiki-content">
+<table class="aui">
+<tbody>
+<thead>
+<tr>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.description')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.priority')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.lastChange')}</th>
+</tr>
+</thead>
+<tbody>
+    {foreach $trigger in $triggers}
+        {call .zabbixTriggerLine}
+            {param trigger: $trigger/}
+        {/call}
+    {/foreach}
+</tbody>
+</table>
+</div>
+{/template}
+
+
+/**
+* Zabbix Trigger Line Template
+* @param trigger
+*/
+{template .zabbixTriggerLine}
+<tr class="zabbix-trigger-{$trigger.priority}" data-trigger-id="{$trigger.triggerId}">
+<td class="zabbix zabbix-trigger"><span class="{$trigger.iconClass} zabbix-icon"></span> <a href="javascript:0;">{$trigger.description}</a></td>
+<td class="zabbix">{$trigger.priorityUpperCase}</td>
+<td class="zabbix">{$trigger.timestamp}</td>
+</tr>
+{/template}
+
+
+/**
+* Zabbix Triggers Template (all hosts)
+* @param triggers
+*/
+{template .zabbixTriggersAll}
+<table class="aui">
+<tbody>
+<thead>
+<tr>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.description')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.host')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.group')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.priority')}</th>
+    <th>{getText('com.mesilat.zabbix-plugin.zabbix-triggers.lastChange')}</th>
+</tr>
+</thead>
+<tbody>
+    {foreach $trigger in $triggers}
+        {call .zabbixTriggerAllLine}
+            {param trigger: $trigger/}
+        {/call}
+    {/foreach}
+</tbody>
+</table>
+{/template}
+
+
+/**
+* Zabbix Trigger Line Template (all hosts)
+* @param trigger
+*/
+{template .zabbixTriggerAllLine}
+<tr class="zabbix-trigger-{$trigger.priority}" data-trigger-id="{$trigger.triggerId}">
+    <td class="zabbix zabbix-trigger"><span class="{$trigger.iconClass} zabbix-icon"></span> <a href="javascript:0;">{$trigger.description}</a></td>
+    <td class="zabbix zabbix-trigger-host">{if isNonnull($trigger.hostName)}{$trigger.hostName}{/if}</td>
+    <td class="zabbix zabbix-trigger-group">{if isNonnull($trigger.groupName)}{$trigger.groupName}{/if}</td>
+    <td class="zabbix">{$trigger.priorityUpperCase}</td>
+    <td class="zabbix">{$trigger.timestamp}</td>
+</tr>
+{/template}

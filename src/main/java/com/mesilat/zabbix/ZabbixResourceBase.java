@@ -15,8 +15,19 @@ import com.atlassian.sal.api.user.UserProfile;
 import com.atlassian.upm.api.license.PluginLicenseManager;
 import com.atlassian.user.User;
 import com.mesilat.zabbix.client.ZabbixClient;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Locale;
 import javax.ws.rs.core.Response;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +64,9 @@ public class ZabbixResourceBase {
             return conn;
         }
     }
-    private boolean hasPermissions(UserKey userKey, ZabbixConnectionDescriptor connection){
+    protected boolean hasPermissions(UserKey userKey, ZabbixConnectionDescriptor connection){
         if (connection == null){
             return false;
-        }
-        if ("Y".equalsIgnoreCase(connection.getDefault())){
-            return true;
         }
         if (userManager.isAdmin(userKey)){
             return true;
@@ -67,6 +75,10 @@ public class ZabbixResourceBase {
         if (userKey.getStringValue().equals(connection.getOwnerKey())){
             return true;
         }
+        if ("Y".equalsIgnoreCase(connection.getDefault())){
+            return true;
+        }
+
         for (ZabbixConnectionGrant grant : connection.getGrants()){
             UserProfile up = userManager.getUserProfile(grant.getGrantee());
             if (up != null && up.getUserKey().equals(userKey)){
@@ -131,6 +143,18 @@ public class ZabbixResourceBase {
             return false;
         }
     }
+    protected CloseableHttpClient createHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        SSLContextBuilder builder = new SSLContextBuilder();
+        builder.loadTrustMaterial(null, new TrustAllStrategy());
+        return HttpClients
+            .custom()
+            .setSSLSocketFactory(
+                new SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE)
+            )
+            .setDefaultCookieStore(new DummyCookieStore())
+            .build();
+    }
+
     
     protected static String unscramble(String password){
         try {
@@ -168,5 +192,12 @@ public class ZabbixResourceBase {
         this.localeManager = localeManager;
         this.ao = ao;
         this.settingsManager = settingsManager;
+    }
+
+    public static class TrustAllStrategy implements TrustStrategy {
+        @Override
+        public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            return true;
+        }
     }
 }

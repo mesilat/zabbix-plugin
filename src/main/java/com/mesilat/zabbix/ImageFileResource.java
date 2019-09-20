@@ -1,72 +1,80 @@
 package com.mesilat.zabbix;
 
-import com.atlassian.confluence.user.ConfluenceUser;
-import com.atlassian.seraph.auth.DefaultAuthenticator;
-import com.mesilat.util.DemoAuthFilter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import com.mesilat.zabbix.client.ZabbixClientException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Path("/image")
 public class ImageFileResource {
-    private static final Logger LOGGER = LoggerFactory.getLogger("com.mesilat.zabbix");
+    private final ImageService imageService;
 
     @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces("image/png")
     public Response get(@Context HttpServletRequest request) {
-        File file = new File(System.getProperty("java.io.tmpdir"), request.getParameter("file"));
-        if (waitForFile(file)) {
-            try {
-                cleanDemoAuth(request);
-                return Response
-                    .ok(Files.readAllBytes(Paths.get(file.getAbsolutePath())))
-                    .build();
-            } catch(IOException ex) {
-                LOGGER.warn("Error reading file " + file.getAbsolutePath(), ex);
-                cleanDemoAuth(request);
-                return Response.status(Response.Status.NOT_FOUND).build();
-            } finally {
-                file.delete();
-            }
-        } else {
-            cleanDemoAuth(request);
-            return Response
-                .status(Response.Status.NOT_FOUND)
-                .build();
-        }
-    }
-    private boolean waitForFile(File file) {
         try {
-            for (int i = 0; i < 100; i++) {
-                if (file.exists() && file.length() > 0) {
-                    break;
-                } else {
-                    Thread.sleep(100);
-                }
+            if (request.getParameter("server") == null){
+                return Response.ok(imageService.getImage(
+                        request.getParameter("graph-id"),
+                        request.getParameter("width"),
+                        request.getParameter("height"),
+                        request.getParameter("period")
+                )).build();
+            } else {
+                return Response.ok(imageService.getImage(
+                    request.getParameter("server"),
+                    request.getParameter("host"),
+                    request.getParameter("graph"),
+                    request.getParameter("width"),
+                    request.getParameter("height"),
+                    request.getParameter("period")
+                )).build();
             }
-            Thread.sleep(100);
-        } catch(InterruptedException ignore) {
+        } catch (ZabbixResourceException ex) {
+            return Response.status(ex.getStatus()).entity(ex.getMessage()).build();
+        } catch (ZabbixClientException ex) {
+            return Response.status(ex.getErrorCode()).entity(ex.getMessage()).build();
         }
-        return file.exists();
     }
-    private void cleanDemoAuth(HttpServletRequest request) {
-        if (request.getSession().getAttribute(DefaultAuthenticator.LOGGED_IN_KEY) != null) {
-            try {
-                ConfluenceUser user = (ConfluenceUser)request.getSession().getAttribute(DefaultAuthenticator.LOGGED_IN_KEY);
-                if (user.getKey().equals(DemoAuthFilter.DEMO)) {
-                    request.getSession().setAttribute(DefaultAuthenticator.LOGGED_IN_KEY, null);
-                }
-            } catch(Throwable ignore) {}
+
+    @GET
+    @Path("/map")
+    @Produces("image/png")
+    public Response map(@Context HttpServletRequest request) {
+        try {
+            return Response.ok(imageService.getMapImage(
+                request.getParameter("server"),
+                request.getParameter("map"),
+                request.getParameter("severity")
+            )).build();
+        } catch (ZabbixResourceException ex) {
+            return Response.status(ex.getStatus()).entity(ex.getMessage()).build();
+        } catch (ZabbixClientException ex) {
+            return Response.status(ex.getErrorCode()).entity(ex.getMessage()).build();
         }
+    }
+
+    @GET
+    @Path("/map-svg")
+    @Produces("application/json")
+    public Response mapSvg(@Context HttpServletRequest request) {
+        try {
+            return Response.ok(imageService.getMapImage(
+                request.getParameter("server"),
+                request.getParameter("map"),
+                request.getParameter("severity")
+            )).build();
+        } catch (ZabbixResourceException ex) {
+            return Response.status(ex.getStatus()).entity(ex.getMessage()).build();
+        } catch (ZabbixClientException ex) {
+            return Response.status(ex.getErrorCode()).entity(ex.getMessage()).build();
+        }
+    }
+
+    public ImageFileResource(ImageService imageService) {
+        this.imageService = imageService;
     }
 }

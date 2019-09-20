@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 @Path("/map")
 public class ZabbixMapResource extends ZabbixResourceBase {
+    
     @GET
     @Produces(MediaType.APPLICATION_JSON + "; charset=utf-8")
     public Response get(@QueryParam("server") Integer server, @QueryParam("q") String query, @Context HttpServletRequest request) {

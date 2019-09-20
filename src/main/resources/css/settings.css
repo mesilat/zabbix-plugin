@@ -1,0 +1,13 @@
+form.com-mesilat-zabbix-connection-form,
+form.com-mesilat-zabbix-format-form
+{
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin: 10px 0 10px 0;
+    padding: 20px;
+}
+
+div.com-mesilat-zabbix-intable-form
+{
+    margin: 10px;
+}

@@ -1,0 +1,71 @@
+{namespace Mesilat.Zabbix.Templates}
+
+/**
+* Zabbix Graph Select Form Template
+*/
+{template .graphSelectForm}
+<form class="aui">
+<div class="field-group">
+<label for="zabbix-host">{getText('com.mesilat.zabbix-plugin.host.label')}</label>
+<input type="hidden" id="zabbix-host" name="zabbix-host"/>
+<div class="description">{getText('com.mesilat.zabbix-plugin.host.desc')}</div>
+</div>
+<div class="field-group">
+<label>{getText('com.mesilat.zabbix-plugin.graph.label')}</label>
+<nav class="aui-navgroup aui-navgroup-vertical">
+<div class="aui-navgroup-inner">
+<ul id="zabbix-graph-list" class="aui-nav zabbix-graph-list" style="border-top: 1px solid #cccccc;">
+</ul>
+</div>
+</nav>
+</div>
+<div class="buttons-container">
+<div class="buttons">
+<a class="cancel" href="#">{getText('com.mesilat.zabbix-plugin.common.close')}</a>
+</div>
+</div>
+</form>
+{/template}
+
+
+/**
+* Zabbix Item Select Form Template
+*/
+{template .itemSelectForm}
+<form class="aui">
+<div class="field-group">
+<label for="zabbix-host">{getText('com.mesilat.zabbix-plugin.host.label')}</label>
+<input type="hidden" id="zabbix-host" name="zabbix-host"/>
+<div class="description">{getText('com.mesilat.zabbix-plugin.host.desc')}</div>
+</div>
+<div class="field-group">
+<label for="zabbix-item">{getText('com.mesilat.zabbix-plugin.item.label')}</label>
+<input type="hidden" id="zabbix-item" name="zabbix-item"/>
+<div class="description">{getText('com.mesilat.zabbix-plugin.item.desc')}</div>
+</div>
+<div class="buttons-container">
+<div class="buttons">
+<a class="cancel" href="#">{getText('com.mesilat.zabbix-plugin.common.close')}</a>
+</div>
+</div>
+</form>
+{/template}
+
+
+/**
+* Zabbix Host Select Form Template
+*/
+{template .hostSelectForm}
+<form class="aui">
+<div class="field-group">
+<label for="zabbix-host">{getText('com.mesilat.zabbix-plugin.host.label')}</label>
+<input type="hidden" id="zabbix-host" name="zabbix-host"/>
+<div class="description">{getText('com.mesilat.zabbix-plugin.host.desc')}</div>
+</div>
+<div class="buttons-container">
+<div class="buttons">
+<a class="cancel" href="#">{getText('com.mesilat.zabbix-plugin.common.close')}</a>
+</div>
+</div>
+</form>
+{/template}

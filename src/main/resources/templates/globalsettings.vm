@@ -1,0 +1,35 @@
+<html>
+<head>
+    <title>$generalUtil.htmlEncode($pageTitle)</title>
+    <meta name="decorator" content="atl.admin">
+    #requireResourcesForContext("zabbix-plugin-settings")
+</head>
+<body>
+    <div class="aui-tabs horizontal-tabs com-mesilat-zabbix-globalsettings">
+        <ul class="tabs-menu">
+            <li class="menu-item active-tab">
+                <a href="#com-mesilat-zabbix-globalsettings-pane1">$i18n.getText("com.mesilat.zabbix-plugin.globalsettings.pane1")</a>
+            </li>
+            <li class="menu-item">
+                <a href="#com-mesilat-zabbix-globalsettings-pane2">$i18n.getText("com.mesilat.zabbix-plugin.globalsettings.pane2")</a>
+            </li>
+        </ul>
+
+        <div class="tabs-pane active-pane" id="com-mesilat-zabbix-globalsettings-pane1">
+            <div id="com-mesilat-zabbix-servers"></div>
+            <br/>
+            <div>
+                Create a new <a href="#" id="com-mesilat-zabbix-server-new">Zabbix server</a> connection descriptor
+            </div>
+        </div>
+
+        <div class="tabs-pane" id="com-mesilat-zabbix-globalsettings-pane2">
+            <div id="com-mesilat-zabbix-formats"></div>
+            <br/>
+            <div>
+                Create a new <a href="#" id="com-mesilat-zabbix-format-new">Named Item Format</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

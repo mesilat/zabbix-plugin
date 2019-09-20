@@ -1,0 +1,277 @@
+{namespace Mesilat.Zabbix.Templates}
+
+/**
+* Zabbix Connection Descriptor template
+* @param id
+* @param url
+* @param username
+* @param password
+* @param grantees
+*/
+{template .connectionDescriptor}
+<form class="aui com-mesilat-zabbix-connection-form">
+    <input type="hidden" id="zabbix-server-id" name="id" {if $id}value="{$id}"{/if}>
+    <div class="field-group">
+        <label for="url">{getText('com.mesilat.zabbix-plugin.settings.url.label')}<span class="aui-icon icon-required">(required)</span></label>
+        <input type="text" id="zabbix-server-url" name="url" class="text medium-long-field"
+            placeholder="{getText('com.mesilat.zabbix-plugin.settings.url.placeholder')}"
+            {if $url}value="{$url}"{/if}
+        >
+        <div class="description">{getText('com.mesilat.zabbix-plugin.settings.url.desc')}</div>
+    </div>
+    <div class="field-group">
+        <label for="username">{getText('com.mesilat.zabbix-plugin.settings.username.label')}<span class="aui-icon icon-required">(required)</span></label>
+        <input type="text" id="zabbix-server-username" name="username" class="text"
+            placeholder="{getText('com.mesilat.zabbix-plugin.settings.username.placeholder')}"
+            {if $username}value="{$username}"{/if}
+        >
+    </div>
+    <div class="field-group">
+        <label for="password">{getText('com.mesilat.zabbix-plugin.settings.password.label')}<span class="aui-icon icon-required">(required)</span></label>
+        <input type="password" id="zabbix-server-password" name="password" class="text"
+            placeholder="{getText('com.mesilat.zabbix-plugin.settings.password.placeholder')}"
+            {if $password}value="{$password}"{/if}
+        >
+    </div>
+    <div class="field-group">
+        <label for="grantees">{getText('com.mesilat.zabbix-plugin.settings.grantees.label')}</label>
+        <input id="com-mesilat-zabbix-grantees" name="grantees" class="autocomplete-multiusergroup text medium-long-field"
+            data-include-groups="true"
+            placeholder="{getText('com.mesilat.zabbix-plugin.settings.grantees.placeholder')}"
+            {if $grantees}value="{$grantees}"{/if}
+            />
+        <div class="description">{getText('com.mesilat.zabbix-plugin.settings.grantees.desc')}</div>
+    </div>
+
+    <div class="field-group">
+        <button id="com-mesilat-zabbix-save"   type="submit" class="aui-button aui-button-primary">{getText('com.mesilat.zabbix-plugin.common.save')}</button>
+        <button id="com-mesilat-zabbix-cancel" type="cancel" class="aui-button aui-button-link">{getText('com.mesilat.zabbix-plugin.common.cancel')}</button>
+    </div>
+
+    <div class="aui-message" style="display:none;"></div>
+</form>
+{/template}
+
+/**
+* List of Zabbix Connection Descriptors template
+* @param recs
+* @param admin
+* @param user
+*/
+{template .connections}
+<table class="aui">
+    <thead>
+        <tr>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.url.label')}</th>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.username.label')}</th>
+            {if $admin}
+            <th>{getText('com.mesilat.zabbix-plugin.settings.owner.label')}</th>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.grantees.label')}</th>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.default.label')}</th>
+            {/if}
+            <th>{getText('com.mesilat.zabbix-plugin.common.actions')}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {foreach $rec in $recs}
+        {call .connection}
+            {param rec: $rec/}
+            {param admin: $admin/}
+            {param user: $user/}
+        {/call}
+    {/foreach}
+    </tbody>
+</table>
+{/template}
+
+
+/**
+* Single Zabbix Server template
+* @param rec
+* @param admin
+* @param user
+*/
+{template .connection}
+<tr>
+    <td>{$rec.url}</td>
+    <td>{$rec.username}</td>
+    {if $admin}
+        <td>
+            {if $rec.ownerName}
+                {call Confluence.Templates.User.usernameLink}
+                    {param username: $rec.ownerName /}
+                    {param fullName: $rec.ownerFullName /}
+                    {param canView: false /}
+                {/call}
+            {/if}
+        </td>
+        <td>{$rec.grantees}</td>
+        <td>{if $rec.default}True{else}False{/if}</td>
+    {/if}
+    <td>
+        {if $admin or $user == $rec.ownerName}
+            <button class="aui-button aui-button-link com-mesilat-zabbix-edit">{getText('com.mesilat.zabbix-plugin.common.edit')}</button>
+            <button class="aui-button aui-button-link com-mesilat-zabbix-delete">{getText('com.mesilat.zabbix-plugin.common.delete')}</button>
+        {/if}
+        {if $admin and not $rec.default}
+            <button class="aui-button aui-button-link com-mesilat-zabbix-set-default" title="{getText('com.mesilat.zabbix-plugin.settings.set-default.title')}">{getText('com.mesilat.zabbix-plugin.settings.set-default.label')}</button>
+        {/if}
+    </td>
+</tr>
+{/template}
+
+
+/**
+* Delete Zabbix Server dialog template
+*/
+{template .deleteConnection}
+<section role="dialog" class="aui-layer aui-dialog2 aui-dialog2-small" aria-hidden="true">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">{getText('com.mesilat.zabbix-plugin.action-confirm')}</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">{getText('com.mesilat.zabbix-plugin.common.close')}</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <p>{getText('com.mesilat.zabbix-plugin.warning.delete-connection')}</p>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button class="aui-button aui-button-primary delete">{getText('com.mesilat.zabbix-plugin.common.delete')}</button>
+            <button class="aui-button aui-button-link cancel">{getText('com.mesilat.zabbix-plugin.common.cancel')}</button>
+        </div>
+    </footer>
+</section>
+{/template}
+
+
+/**
+* Zabbix Named Format template
+* @param id
+* @param name
+* @param format
+* @param public
+*/
+{template .namedFormat}
+<form class="aui com-mesilat-zabbix-format-form">
+    <input type="hidden" id="zabbix-named-formats-id"
+        name="id"
+        {if $id}value="{$id}"{/if}>
+
+    <div class="field-group">
+        <label for="name">{getText('com.mesilat.zabbix-plugin.settings.formats.name.label')}</label>
+        <input type="text" id="zabbix-named-formats-name"
+            name="name" class="text"
+            placeholder="{getText('com.mesilat.zabbix-plugin.settings.formats.name.placeholder')}"
+            {if $name}value="{$name}"{/if}>
+    </div>
+    <div class="field-group">
+        <label for="format">{getText('com.mesilat.zabbix-plugin.settings.formats.format.label')}</label>
+        <input type="text" id="zabbix-named-formats-format"
+            name="format" class="text"
+            placeholder="{getText('com.mesilat.zabbix-plugin.settings.formats.format.placeholder')}"
+            {if $format}value="{$format}"{/if}>
+    </div>
+
+    <div class="field-group">
+        <label for="public">{getText('com.mesilat.zabbix-plugin.settings.formats.public.label')}</label>
+        <input type="checkbox" id="zabbix-named-formats-public"
+            name="public" class="checkbox"
+            {if $public}checked{/if}>
+        <div class="description">{getText('com.mesilat.zabbix-plugin.settings.formats.public.desc')}</div>
+    </div>
+
+    <div class="field-group">
+        <button id="com-mesilat-zabbix-formats-save"   type="submit" class="aui-button aui-button-primary">{getText('com.mesilat.zabbix-plugin.common.save')}</button>
+        <button id="com-mesilat-zabbix-formats-cancel" type="cancel" class="aui-button aui-button-link">{getText('com.mesilat.zabbix-plugin.common.cancel')}</button>
+    </div>
+
+    <div class="aui-message" style="display:none;"></div>
+</form>
+{/template}
+
+/**
+* List of Named Formats template
+* @param recs
+* @param admin
+* @param user
+*/
+{template .formats}
+<table class="aui">
+    <thead>
+        <tr>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.formats.name.label')}</th>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.formats.format.label')}</th>
+            <th>{getText('com.mesilat.zabbix-plugin.settings.formats.public.label')}</th>
+            {if $admin}
+                <th>{getText('com.mesilat.zabbix-plugin.settings.owner.label')}</th>
+            {/if}
+            <th>{getText('com.mesilat.zabbix-plugin.common.actions')}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {foreach $rec in $recs}
+        {call .format}
+            {param rec: $rec/}
+            {param admin: $admin/}
+            {param user: $user/}
+        {/call}
+    {/foreach}
+    </tbody>
+</table>
+{/template}
+
+/**
+* Single Named Format template
+* @param rec
+* @param admin
+* @param user
+*/
+{template .format}
+<tr>
+    <td>{$rec.name}</td>
+    <td>{$rec.format}</td>
+    <td>{if $rec.public}True{else}False{/if}</td>
+    {if $admin}
+        <td>
+            {if $rec.ownerName}
+                {call Confluence.Templates.User.usernameLink}
+                    {param username: $rec.ownerName /}
+                    {param fullName: $rec.ownerFullName /}
+                    {param canView: false /}
+                {/call}
+            {/if}
+        </td>
+    {/if}
+    <td>
+    {if $admin or $user == $rec.ownerName}
+        <button class="aui-button aui-button-link com-mesilat-zabbix-edit">{getText('com.mesilat.zabbix-plugin.common.edit')}</button>
+        <button class="aui-button aui-button-link com-mesilat-zabbix-delete">{getText('com.mesilat.zabbix-plugin.common.delete')}</button>
+    {/if}
+    </td>
+</tr>
+{/template}
+
+
+/**
+* Delete Named Format dialog template
+*/
+{template .deleteFormat}
+<section role="dialog" class="aui-layer aui-dialog2 aui-dialog2-small" aria-hidden="true">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">{getText('com.mesilat.zabbix-plugin.action-confirm')}</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">{getText('com.mesilat.zabbix-plugin.common.close')}</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <p>{getText('com.mesilat.zabbix-plugin.warning.delete-format')}</p>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button class="aui-button aui-button-primary delete">{getText('com.mesilat.zabbix-plugin.common.delete')}</button>
+            <button class="aui-button aui-button-link cancel">{getText('com.mesilat.zabbix-plugin.common.cancel')}</button>
+        </div>
+    </footer>
+</section>
+{/template}

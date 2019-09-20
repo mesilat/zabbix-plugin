@@ -24,7 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
 @ExportAsService({PageEventListener.class})
 @Named("com.mesilat:zabbix-plugin:pageEventListener")
 public class PageEventListenerImpl implements PageEventListener, InitializingBean, DisposableBean {
-    public static final Logger LOGGER = LoggerFactory.getLogger("com.mesilat.zabbix-plugin");
+    public static final Logger LOGGER = LoggerFactory.getLogger("com.mesilat.zabbix");
 
     private final EventPublisher eventPublisher;
     private final I18nResolver resolver;

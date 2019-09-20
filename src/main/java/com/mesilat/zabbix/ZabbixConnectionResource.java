@@ -25,7 +25,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -37,10 +36,14 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path("/connection")
 @Scanned
 public class ZabbixConnectionResource extends ZabbixResourceBase {
+    private static final Logger LOGGER = LoggerFactory.getLogger("com.mesilat.zabbix");
+
     private final ActiveObjects ao;
     private final UserAccessor userAccessor;
     private final PermissionManager permissionManager;
@@ -62,24 +65,35 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
                     ).build();
                 } else {
                     JSONArray arr = new JSONArray();
-                    for (ZabbixConnectionDescriptor connection: ao.find(ZabbixConnectionDescriptor.class, "OWNER_KEY = ?", userKey.getStringValue())){
-                        if (hasPermissions(userKey, connection)){
-                            if (query == null || connection.getUrl().toUpperCase().contains(query.toUpperCase())){
-                                arr.put(toObject(connection, connection.getGrants()));
+                    ZabbixConnectionDescriptor[] connections = ao.find(ZabbixConnectionDescriptor.class, "OWNER_KEY = ?", userKey.getStringValue());
+                    if (connections != null){
+                        for (ZabbixConnectionDescriptor connection: connections){
+                            if (hasPermissions(userKey, connection)){
+                                if (query == null || connection.getUrl() != null && connection.getUrl().toUpperCase().contains(query.toUpperCase())){
+                                    arr.put(toObject(connection, connection.getGrants()));
+                                }
                             }
                         }
                     }
-                    for (ZabbixConnectionDescriptor connection: ao.find(ZabbixConnectionDescriptor.class, "OWNER_KEY IS NULL")){
-                        if (hasPermissions(userKey, connection)){
-                            if (query == null || connection.getUrl().toUpperCase().contains(query.toUpperCase())){
-                                arr.put(toObject(connection, connection.getGrants()));
+
+                    connections = ao.find(ZabbixConnectionDescriptor.class, "OWNER_KEY IS NULL");
+                    if (connections != null){
+                        for (ZabbixConnectionDescriptor connection: connections){
+                            if (hasPermissions(userKey, connection)){
+                                if (query == null || connection.getUrl() != null && connection.getUrl().toUpperCase().contains(query.toUpperCase())){
+                                    arr.put(toObject(connection, connection.getGrants()));
+                                }
                             }
                         }
                     }
-                    for (ZabbixConnectionDescriptor connection: ao.find(ZabbixConnectionDescriptor.class, "OWNER_KEY <> ?", userKey.getStringValue())){
-                        if (hasPermissions(userKey, connection)){
-                            if (query == null || connection.getUrl().toUpperCase().contains(query.toUpperCase())){
-                                arr.put(toObject(connection, connection.getGrants()));
+
+                    connections = ao.find(ZabbixConnectionDescriptor.class, "OWNER_KEY <> ?", userKey.getStringValue());
+                    if (connections != null){
+                        for (ZabbixConnectionDescriptor connection: connections){
+                            if (hasPermissions(userKey, connection)){
+                                if (query == null || connection.getUrl() != null && connection.getUrl().toUpperCase().contains(query.toUpperCase())){
+                                    arr.put(toObject(connection, connection.getGrants()));
+                                }
                             }
                         }
                     }
@@ -88,15 +102,16 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
                     return Response.ok(results.toString()).build();
                 }
             } catch (JSONException ex) {
+                LOGGER.error("Error getting a list of available connections", ex);
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build();
             }
         });
     }
 
-    @PUT
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON + "; charset=utf-8")
-    public Response put(final ObjectNode obj, @Context HttpServletRequest request) {
+    public Response post(final ObjectNode obj, @Context HttpServletRequest request) {
         UserKey userKey = getUserManager().getRemoteUserKey(request);
 
         if (obj.get("url") == null || obj.get("username") == null || obj.get("password") == null){
@@ -135,6 +150,9 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
                 try {
                     testConnection(connection);
                 } catch (Throwable ex) {
+                    if (obj.get("id") == null){
+                        ao.delete(connection);
+                    }
                     return Response.status(Response.Status.BAD_REQUEST).entity(ex.getMessage()).build();
                 }
                 connection.save();
@@ -147,6 +165,9 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
 
                 if (obj.get("grantees") != null){
                     for (String grantee: obj.get("grantees").asText().split(",")){
+                        if (grantee.isEmpty()){
+                            continue;
+                        }
                         ZabbixConnectionGrant grant = ao.create(ZabbixConnectionGrant.class);
                         grant.setConnectionDescriptor(connection);
                         grant.setGrantee(grantee);
@@ -186,6 +207,7 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
     }
 
     @POST
+    @Path("/set-default")
     public Response post(final Integer id, @Context HttpServletRequest request) {
         UserKey userKey = getUserManager().getRemoteUserKey(request);
         ConfluenceUser user = userAccessor.getUserByKey(userKey);
@@ -230,18 +252,25 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
         if (grants != null && grants.length > 0){
             ArrayList<String> grantees = new ArrayList<>();
             JSONObject images = new JSONObject();
+            JSONObject fullNames = new JSONObject();
             for (ZabbixConnectionGrant grant : grants){
+                if (grant.getGrantee() == null){
+                    continue;
+                }
                 grantees.add(grant.getGrantee());
                 UserProfile userProfile = getUserManager().getUserProfile(grant.getGrantee());
                 if (userProfile == null){
                     images.put(grant.getGrantee(), getBaseUrl() + "/images/icons/avatar_group_48.png");
+                    fullNames.put(grant.getGrantee(), grant.getGrantee());
                 } else {
                     URI pictureUri = userProfile.getProfilePictureUri();
                     images.put(grant.getGrantee(), pictureUri == null? getBaseUrl() + "/images/icons/profilepics/default.png": pictureUri.toString());
+                    fullNames.put(grant.getGrantee(), userProfile.getFullName());
                 }
             }
             obj.put("grantees", StringUtils.join(grantees, ","));
             obj.put("images", images);
+            obj.put("fullNames", fullNames);
         } else {
             obj.put("grantees", "");
         }
@@ -251,30 +280,6 @@ public class ZabbixConnectionResource extends ZabbixResourceBase {
         ZabbixClient client = new ZabbixClient(connection.getUrl());
         client.connect(connection.getUsername(), unscramble(connection.getPassword()));
         connection.setVersion(client.getVersion());
-    }
-    private boolean hasPermissions(UserKey userKey, ZabbixConnectionDescriptor connection){
-        if (getUserManager().isAdmin(userKey)){
-            return true;
-        }
-
-        if (userKey.getStringValue().equals(connection.getOwnerKey())){
-            return true;
-        }
-
-        if ("Y".equalsIgnoreCase(connection.getDefault())){
-            return true;
-        }
-
-        for (ZabbixConnectionGrant grant : connection.getGrants()){
-            UserProfile up = getUserManager().getUserProfile(grant.getGrantee());
-            if (up != null && up.getUserKey().equals(userKey)){
-                return true;
-            }
-            if (getUserManager().isUserInGroup(userKey, grant.getGrantee())){
-                return true;
-            }
-        }
-        return false;
     }
 
     public ZabbixConnectionResource(

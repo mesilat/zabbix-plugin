@@ -1,6 +1,5 @@
 package com.mesilat.util;
 
-import com.mesilat.util.ArrayUtil;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
