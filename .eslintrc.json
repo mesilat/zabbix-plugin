@@ -1,0 +1,26 @@
+{
+  "extends": "airbnb-base",
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true,
+    "jquery": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "rules": {
+    "import/no-extraneous-dependencies": "off",
+    "no-undef": "off",
+    "no-plusplus": "off",
+    "func-names": "off",
+    "no-script-url": "off",
+    "import/prefer-default-export": "off",
+    "no-param-reassign": "off",
+    "no-underscore-dangle": "off"
+  },
+  "globals": {
+    "_": false,
+    "location": false
+  }
+}

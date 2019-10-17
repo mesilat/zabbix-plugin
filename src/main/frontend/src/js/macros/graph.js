@@ -3,14 +3,14 @@ import _ from 'lodash';
 import {
   setupServerParam,
   setupHostParam,
-  setupGraphParam
+  setupGraphParam,
 } from './general';
 
-export async function loadGraph(data, url){
+export async function loadGraph(data, url) {
   const deferred = $.Deferred();
   const xhr = new XMLHttpRequest();
   url = url || `${AJS.contextPath()}/rest/zabbix-plugin/1.0/image`;
-  const _data = [ `_=${Date.now()}` ];
+  const _data = [`_=${Date.now()}`];
 
   _.keys(data).forEach((key) => {
     _data.push(`${key}=${encodeURIComponent(data[key])}`);
@@ -19,13 +19,12 @@ export async function loadGraph(data, url){
 
   xhr.open('GET', url, true);
   xhr.responseType = 'blob';
-  xhr.onload = function(e){
-    if (this.status === 200){
-      const url = window.URL || window.webkitURL;
-      deferred.resolve(url.createObjectURL(e.target.response));
+  xhr.onload = function (e) {
+    if (this.status === 200) {
+      deferred.resolve((window.URL || window.webkitURL).createObjectURL(e.target.response));
     } else {
       const reader = new FileReader();
-      reader.addEventListener('loadend', (e) => deferred.reject(e.srcElement.result));
+      reader.addEventListener('loadend', el => deferred.reject(el.srcElement.result));
       reader.readAsText(e.target.response);
     }
   };
@@ -33,51 +32,51 @@ export async function loadGraph(data, url){
   return deferred.promise();
 }
 
-async function showGraph($div){
+async function showGraph($div) {
   const $pre = $div.find('pre');
 
   let params;
-  if ($div.data('server')){
+  if ($div.data('server')) {
     params = {
       server: $div.data('server'),
-      host:   $div.data('host'),
-      graph:  $div.data('graph'),
+      host: $div.data('host'),
+      graph: $div.data('graph'),
       period: $div.data('period'),
-      width:  $div.data('width'),
-      height: $div.data('height')
+      width: $div.data('width'),
+      height: $div.data('height'),
     };
   } else {
     params = {
-      'graph-id':  $div.data('graph-id'),
+      'graph-id': $div.data('graph-id'),
       period: $div.data('period'),
-      width:  $div.data('width'),
-      height: $div.data('height')
+      width: $div.data('width'),
+      height: $div.data('height'),
     };
   }
 
-  if (typeof $pre.spin === 'function'){
+  if (typeof $pre.spin === 'function') {
     $pre.find('span').spin();
   }
 
   try {
     const data = await loadGraph(params);
     $pre.empty().append($('<img>').attr('src', data));
-    if ($div.hasClass('zabbix-plugin-not-licensed')){
+    if ($div.hasClass('zabbix-plugin-not-licensed')) {
       $div.append($(Mesilat.Zabbix.GeneralTemplates.notLicensedWarning({})));
     }
-  } catch(err) {
-    $pre.empty().append(AJS.I18n.getText('com.mesilat.zabbix-plugin.zabbix-graph.label') + ': ' + err);
+  } catch (err) {
+    $pre.empty().append(`${AJS.I18n.getText('com.mesilat.zabbix-plugin.zabbix-graph.label')}: ${err}`);
   }
 }
 
-export function showGraphs(){
-  $('div.zabbix-graph').each(function (){
+export function showGraphs() {
+  $('div.zabbix-graph').each(function () {
     showGraph($(this));
   });
 }
 
-export async function initGraph(selectedParams, macroSelected) {
-  setupServerParam(selectedParams),
-  setupHostParam(selectedParams),
-  setupGraphParam(selectedParams)
+export async function initGraph(selectedParams/* , macroSelected */) {
+  setupServerParam(selectedParams);
+  setupHostParam(selectedParams);
+  setupGraphParam(selectedParams);
 }

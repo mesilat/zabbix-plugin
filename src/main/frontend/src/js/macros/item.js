@@ -1,44 +1,45 @@
 import $ from 'jquery';
-import _ from 'lodash';
+// import _ from 'lodash';
 import {
+  debug,
   setupServerParam,
   setupHostParam,
   setupItemParam,
-  setupItemFormatParam
+  setupItemFormatParam,
 } from './general';
 
-async function loadItemsLegacy(items){
+async function loadItemsLegacy(items) {
   return $.ajax({
-    url: AJS.contextPath() + '/rest/zabbix-plugin/1.0/items/legacy',
+    url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/items/legacy`,
     type: 'POST',
     contentType: 'application/json',
     data: JSON.stringify(items.obj),
     processData: false,
-    dataType: 'json'
+    dataType: 'json',
   });
 }
-async function loadItemsFromZabbixServer(items, server){
+async function loadItemsFromZabbixServer(items, server) {
   return $.ajax({
-    url: AJS.contextPath() + '/rest/zabbix-plugin/1.0/items',
+    url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/items`,
     type: 'POST',
     contentType: 'application/json',
     data: JSON.stringify(items[server].obj),
     processData: false,
     dataType: 'json',
-    context: items[server]
+    context: items[server],
   });
 }
 
-function showError($elt, message){
+function showError($elt, message) {
   $elt.spinStop();
   $('<a href="#"></a>')
-  .text(AJS.I18n.getText("com.mesilat.zabbix-plugin.common.error"))
-  .appendTo($elt)
-  .attr('title', message)
-  .tooltip();
+    .text(AJS.I18n.getText('com.mesilat.zabbix-plugin.common.error'))
+    .appendTo($elt)
+    .attr('title', message)
+    .tooltip();
 }
 
-async function showItemsForServer(items, server){
+async function showItemsForServer(items, server) {
   try {
     const data = await loadItemsFromZabbixServer(items, server);
     if (data.results) {
@@ -50,13 +51,13 @@ async function showItemsForServer(items, server){
         }
       }
     } else {
-      console.log('zabbix-plugin', 'Invalid data received from REST service', data);
+      debug('zabbix-plugin', 'Invalid data received from REST service', data);
       items[server].elt.forEach(($elt) => {
         $elt.spinStop();
-        showError($elt, AJS.I18n.getText("com.mesilat.zabbix-plugin.error.unexpected"));
+        showError($elt, AJS.I18n.getText('com.mesilat.zabbix-plugin.error.unexpected'));
       });
     }
-  } catch(err) {
+  } catch (err) {
     items[server].elt.forEach(($elt) => {
       $elt.spinStop();
       showError($elt, jqXHR.responseText);
@@ -65,20 +66,20 @@ async function showItemsForServer(items, server){
 }
 
 export function showItems() {
-  var items = {};
+  const items = {};
   $('.zabbix-item2').each(function () {
-    var $elt = $(this);
-    var obj = {
+    const $elt = $(this);
+    const obj = {
       server: $elt.attr('server'),
       host: $elt.attr('host'),
       item: $elt.attr('item'),
       format: $elt.attr('format'),
-      token: $elt.attr('token')
+      token: $elt.attr('token'),
     };
     if (!(obj.server in items)) {
       items[obj.server] = {
         obj: [],
-        elt: []
+        elt: [],
       };
     }
     items[obj.server].obj.push(obj);
@@ -86,21 +87,19 @@ export function showItems() {
     $elt.spin();
   });
   // Requests per server
-  for (let server in items) {
-    showItemsForServer(items, server);
-  }
+  _.keys(items).forEach(server => showItemsForServer(items, server));
 }
 export async function showItemsLegacy() {
   const items = {
     obj: [],
-    elt: []
-  }
+    elt: [],
+  };
   $('.zabbix-item').each(function () {
-    var $item = $(this);
+    const $item = $(this);
     items.obj.push({
       itemId: $item.attr('item-id'),
       format: $item.attr('format'),
-      token: $item.attr('token')
+      token: $item.attr('token'),
     });
     items.elt.push($item);
     $item.spin();
@@ -111,21 +110,21 @@ export async function showItemsLegacy() {
       const data = await loadItemsLegacy(items);
 
       if (data.results) {
-        for (var i = 0; i < items.elt.length; i++) {
-          var $elt = items.elt[i];
+        for (let i = 0; i < items.elt.length; i++) {
+          const $elt = items.elt[i];
           $elt.spinStop();
           if (data.results.length > i) {
             $elt.html(data.results[i]);
           }
         }
       } else {
-        console.log('zabbix-plugin', 'Invalid data received from REST service', data);
-        items.elt.forEach(function ($elt) {
+        debug('zabbix-plugin', 'Invalid data received from REST service', data);
+        items.elt.forEach(($elt) => {
           $elt.spinStop();
-          showError($elt, AJS.I18n.getText("com.mesilat.zabbix-plugin.error.unexpected"));
+          showError($elt, AJS.I18n.getText('com.mesilat.zabbix-plugin.error.unexpected'));
         });
       }
-    } catch(err) {
+    } catch (err) {
       items.elt.forEach(($elt) => {
         $elt.spinStop();
         showError($elt, err.responseText);
@@ -133,7 +132,7 @@ export async function showItemsLegacy() {
     }
   }
 }
-export function initItem(selectedParams, macroSelected) {
+export function initItem(selectedParams/* , macroSelected */) {
   setupServerParam(selectedParams);
   setupHostParam(selectedParams);
   setupItemParam(selectedParams);

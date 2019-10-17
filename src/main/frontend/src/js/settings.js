@@ -3,106 +3,106 @@ import UserGroupSelect2 from 'user-group-select2';
 
 let isAdmin = false;
 
-function error(msg){
-  if ('responseText' in msg){
+function error(msg) {
+  if ('responseText' in msg) {
     alert(msg.responseText);
   } else {
     alert(msg);
   }
 }
-function d(data){
+function d(data) {
   console.log('zabbix-plugin d', data);
   return d;
 }
 
-async function getConnections(){
+async function getConnections() {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/connection`,
     type: 'GET',
-    dataType: 'json'
+    dataType: 'json',
   });
 }
-async function deleteConnection(id){
+async function deleteConnection(id) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/connection?id=${id}`,
-    type: 'DELETE'
+    type: 'DELETE',
   });
 }
-async function postConnection(data){
+async function postConnection(data) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/connection`,
     type: 'POST',
     contentType: 'application/json',
     data: JSON.stringify(data),
     processData: false,
-    dataType: 'json'
+    dataType: 'json',
   });
 }
-async function setDefault(id){
+async function setDefault(id) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/connection/set-default?id=${id}`,
     type: 'POST',
-    contentType: "application/json",
+    contentType: 'application/json',
     data: JSON.stringify(id),
     processData: false,
-    dataType: 'text'
+    dataType: 'text',
   });
 }
 
-async function getFormats(){
+async function getFormats() {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/format`,
     type: 'GET',
-    dataType: 'json'
+    dataType: 'json',
   });
 }
-async function deleteFormat(id){
+async function deleteFormat(id) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/format?id=${id}`,
-    type: 'DELETE'
+    type: 'DELETE',
   });
 }
-async function postFormat(data){
+async function postFormat(data) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/format`,
     type: 'POST',
     contentType: 'application/json',
     data: JSON.stringify(data),
     processData: false,
-    dataType: 'json'
+    dataType: 'json',
   });
 }
 
-async function initConnectionDescriptorTable($div){
-  //try {
-    const data = await getConnections();
-    const $table = $(Mesilat.Zabbix.Templates.connections({
-      recs: data.results,
-      admin: isAdmin,
-      user: AJS.params.remoteUser
-    }));
+async function initConnectionDescriptorTable($div) {
+  // try {
+  const data = await getConnections();
+  const $table = $(Mesilat.Zabbix.Templates.connections({
+    recs: data.results,
+    admin: isAdmin,
+    user: AJS.params.remoteUser,
+  }));
 
-    $table.appendTo($div.empty());
-    const $rows = $table.find('tbody > tr');
-    for (let i = 0; i < data.results.length; i++){
-      const $tr = $($rows[i]);
-      $tr.prop('data', data.results[i]);
-      initEditConnectionDescriptorButton($tr.find('button.com-mesilat-zabbix-edit'));
-      initDeleteConnectionDescriptorButton($tr.find('button.com-mesilat-zabbix-delete'));
-      initSetDefaultConnectionDescriptorButton($tr.find('button.com-mesilat-zabbix-set-default'));
-    }
-  //} catch(err){
+  $table.appendTo($div.empty());
+  const $rows = $table.find('tbody > tr');
+  for (let i = 0; i < data.results.length; i++) {
+    const $tr = $($rows[i]);
+    $tr.prop('data', data.results[i]);
+    initEditConnectionDescriptorButton($tr.find('button.com-mesilat-zabbix-edit'));
+    initDeleteConnectionDescriptorButton($tr.find('button.com-mesilat-zabbix-delete'));
+    initSetDefaultConnectionDescriptorButton($tr.find('button.com-mesilat-zabbix-set-default'));
+  }
+  // } catch(err){
   //  error(err);
-  //}
+  // }
 }
-function initEditConnectionDescriptorButton($btn){
+function initEditConnectionDescriptorButton($btn) {
   const $tr = $btn.closest('tr');
   $btn.on('click', () => {
     $tr.hide();
     createEditConnectionDescriptorForm($tr);
   });
 }
-async function showConfirmDeleteConnectionDescriptorDialog(){
+async function showConfirmDeleteConnectionDescriptorDialog() {
   const deferred = $.Deferred();
 
   const $dlg = $(Mesilat.Zabbix.Templates.deleteConnection({}));
@@ -117,35 +117,35 @@ async function showConfirmDeleteConnectionDescriptorDialog(){
   AJS.dialog2($dlg).show();
   return deferred.promise();
 }
-function initDeleteConnectionDescriptorButton($btn){
+function initDeleteConnectionDescriptorButton($btn) {
   const $tr = $btn.closest('tr');
   $btn.on('click', async () => {
     const rec = $tr.prop('data');
     const confirm = await showConfirmDeleteConnectionDescriptorDialog();
-    if (confirm){
+    if (confirm) {
       try {
         await deleteConnection(rec.id);
         $tr.remove();
-      } catch(err){
+      } catch (err) {
         error(err);
       }
     }
   });
 }
-function initSetDefaultConnectionDescriptorButton($btn){
+function initSetDefaultConnectionDescriptorButton($btn) {
   const $tr = $btn.closest('tr');
   $btn.on('click', async () => {
     const rec = $tr.prop('data');
     try {
       await setDefault(rec.id);
       initConnectionDescriptorTable($tr.closest('#com-mesilat-zabbix-servers'));
-    } catch(err){
+    } catch (err) {
       error(err);
     }
   });
 }
-function initCreateNewConnectionDescriptor(){
-  $('#com-mesilat-zabbix-server-new').on('click', function(e){
+function initCreateNewConnectionDescriptor() {
+  $('#com-mesilat-zabbix-server-new').on('click', (e) => {
     e.preventDefault();
 
     const $wrapper = $(e.target).parent();
@@ -157,10 +157,10 @@ function initCreateNewConnectionDescriptor(){
     $form.on('click', '#com-mesilat-zabbix-save', async (e) => {
       e.preventDefault();
       const connection = {
-        url:      $form.find('input[name = "url"]').val(),
+        url: $form.find('input[name = "url"]').val(),
         username: $form.find('input[name = "username"]').val(),
         password: $form.find('input[name = "password"]').val(),
-        grantees: $form.find('input[name = "grantees"]').val()
+        grantees: $form.find('input[name = "grantees"]').val(),
       };
       try {
         $form.spin();
@@ -168,22 +168,22 @@ function initCreateNewConnectionDescriptor(){
         const data = await postConnection(connection);
 
         $form
-        .find('div.aui-message')
-        .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-connection')))
-        .css('display', 'block')
-        .removeClass()
-        .addClass('aui-message aui-message-success fadeout');
+          .find('div.aui-message')
+          .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-connection')))
+          .css('display', 'block')
+          .removeClass()
+          .addClass('aui-message aui-message-success fadeout');
         setTimeout(() => {
-          $form.find('.fadeout').each(function(){
+          $form.find('.fadeout').each(function () {
             $(this).removeClass('fadeout');
             $(this).hide(500);
           });
           setTimeout(() => {
-            if (data.results){
+            if (data.results) {
               const $tr = $(Mesilat.Zabbix.Templates.connection({
                 rec: data.results,
                 admin: isAdmin,
-                user: AJS.params.remoteUser
+                user: AJS.params.remoteUser,
               }));
               $('#com-mesilat-zabbix-servers').find('tbody').append($tr);
               $tr.prop('data', data.results);
@@ -195,16 +195,16 @@ function initCreateNewConnectionDescriptor(){
             }
           }, 500);
         }, 2000);
-      } catch(err){
+      } catch (err) {
         console.error('zabbix-plugin', err);
         $form
-        .find('div.aui-message')
-        .html($('<p>').text(err.responseText))
-        .css('display', 'block')
-        .removeClass()
-        .addClass('aui-message aui-message-error fadeout');
+          .find('div.aui-message')
+          .html($('<p>').text(err.responseText))
+          .css('display', 'block')
+          .removeClass()
+          .addClass('aui-message aui-message-error fadeout');
         setTimeout(() => {
-          $form.find('.fadeout').each(function(){
+          $form.find('.fadeout').each(function () {
             $(this).removeClass('fadeout');
             $(this).hide(500);
           });
@@ -220,10 +220,9 @@ function initCreateNewConnectionDescriptor(){
       $wrapper.html(html);
       initCreateNewConnectionDescriptor();
     });
-
   });
 }
-function createEditConnectionDescriptorForm($tr){
+function createEditConnectionDescriptorForm($tr) {
   const rec = $tr.prop('data');
   console.log('zabbix-plugin EditConnectionDescriptor', rec);
   const $tr2 = $(`<tr><td colspan="${($tr.find('td').length)}"><div class="com-mesilat-zabbix-intable-form"></div></td></tr>`).insertBefore($tr);
@@ -233,17 +232,17 @@ function createEditConnectionDescriptorForm($tr){
 
   const $grantees = $form.find('#com-mesilat-zabbix-grantees');
   UserGroupSelect2.bind($form);
-  if (rec.grantees && rec.grantees !== ''){
+  if (rec.grantees && rec.grantees !== '') {
     let grantees = rec.grantees.split(',');
-    if (!_.isArray(grantees)){
-      grantees = [ grantees ];
+    if (!_.isArray(grantees)) {
+      grantees = [grantees];
     }
     const granteeData = [];
     grantees.forEach((grantee) => {
       granteeData.push({
         id: grantee,
         text: rec.fullNames[grantee],
-        imgSrc: rec.images[grantee]
+        imgSrc: rec.images[grantee],
       });
     });
     $grantees.auiSelect2('data', granteeData);
@@ -251,11 +250,11 @@ function createEditConnectionDescriptorForm($tr){
 
   $form.find('#com-mesilat-zabbix-save').on('click', async () => {
     const connection = {
-      id:       $form.find('input[name = "id"]').val(),
-      url:      $form.find('input[name = "url"]').val(),
+      id: $form.find('input[name = "id"]').val(),
+      url: $form.find('input[name = "url"]').val(),
       username: $form.find('input[name = "username"]').val(),
       password: $form.find('input[name = "password"]').val(),
-      grantees: $form.find('input[name = "grantees"]').val()
+      grantees: $form.find('input[name = "grantees"]').val(),
     };
     try {
       $form.spin();
@@ -263,23 +262,23 @@ function createEditConnectionDescriptorForm($tr){
       const data = await postConnection(connection);
 
       $form
-      .find('div.aui-message')
-      .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-connection')))
-      .css('display', 'block')
-      .removeClass()
-      .addClass('aui-message aui-message-success fadeout');
+        .find('div.aui-message')
+        .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-connection')))
+        .css('display', 'block')
+        .removeClass()
+        .addClass('aui-message aui-message-success fadeout');
       setTimeout(() => {
-        $form.find('.fadeout').each(function(){
+        $form.find('.fadeout').each(function () {
           $(this).removeClass('fadeout');
           $(this).hide(500);
         });
         setTimeout(() => {
-          if (data.results){
+          if (data.results) {
             $tr.remove();
             $tr = $(Mesilat.Zabbix.Templates.connection({
               rec: data.results,
               admin: isAdmin,
-              user: AJS.params.remoteUser
+              user: AJS.params.remoteUser,
             }));
             $tr2.replaceWith($tr);
             $tr.prop('data', data.results);
@@ -289,15 +288,15 @@ function createEditConnectionDescriptorForm($tr){
           }
         }, 500);
       }, 2000);
-    } catch(err){
+    } catch (err) {
       $form
-      .find('div.aui-message')
-      .html($('<p>').text(err.responseText))
-      .css('display', 'block')
-      .removeClass()
-      .addClass('aui-message aui-message-error fadeout');
+        .find('div.aui-message')
+        .html($('<p>').text(err.responseText))
+        .css('display', 'block')
+        .removeClass()
+        .addClass('aui-message aui-message-error fadeout');
       setTimeout(() => {
-        $form.find('.fadeout').each(function(){
+        $form.find('.fadeout').each(function () {
           $(this).removeClass('fadeout');
           $(this).hide(500);
         });
@@ -308,44 +307,44 @@ function createEditConnectionDescriptorForm($tr){
     }
   });
 
-  $form.find('#com-mesilat-zabbix-cancel').on('click', function(e){
+  $form.find('#com-mesilat-zabbix-cancel').on('click', (e) => {
     e.preventDefault();
     $div.closest('tbody').find('tr').show();
     $div.closest('tr').remove();
   });
 }
 
-function showFormats(){
-  $('#com-mesilat-zabbix-formats').each(async function(){
+function showFormats() {
+  $('#com-mesilat-zabbix-formats').each(async function () {
     const $div = $(this);
     try {
       const data = await getFormats();
       const $template = $(Mesilat.Zabbix.Templates.formats({
         recs: data.results,
         admin: isAdmin,
-        user: AJS.params.remoteUser
+        user: AJS.params.remoteUser,
       }));
       $template.appendTo($div);
-      for (var i = 0; i < data.results.length; i++){
+      for (let i = 0; i < data.results.length; i++) {
         const $tr = $($template.find('tr')[i + 1]); // Skip header row
         $tr.prop('data', data.results[i]);
         initEditFormatButton($tr.find('button.com-mesilat-zabbix-edit'));
         initDeleteFormatButton($tr.find('button.com-mesilat-zabbix-delete'));
       }
-    } catch(err){
+    } catch (err) {
       error(err);
     }
   });
 }
-function initEditFormatButton($btn){
-  var $tr = $btn.closest('tr');
-  $btn.on('click', function(e){
+function initEditFormatButton($btn) {
+  const $tr = $btn.closest('tr');
+  $btn.on('click', (e) => {
     e.preventDefault();
     $tr.hide();
     createEditFormatForm($tr);
   });
 }
-async function showConfirmDeleteFormatDialog(){
+async function showConfirmDeleteFormatDialog() {
   const deferred = $.Deferred();
 
   const $dlg = $(Mesilat.Zabbix.Templates.deleteFormat({}));
@@ -360,22 +359,22 @@ async function showConfirmDeleteFormatDialog(){
   AJS.dialog2($dlg).show();
   return deferred.promise();
 }
-function initDeleteFormatButton($btn){
+function initDeleteFormatButton($btn) {
   const $tr = $btn.closest('tr');
   $btn.on('click', async () => {
     const rec = $tr.prop('data');
     const confirm = await showConfirmDeleteFormatDialog();
-    if (confirm){
+    if (confirm) {
       try {
         await deleteFormat(rec.id);
         $tr.remove();
-      } catch(err){
+      } catch (err) {
         error(err);
       }
     }
   });
 }
-function initCreateNewFormatLink(){
+function initCreateNewFormatLink() {
   $('#com-mesilat-zabbix-format-new').on('click', (e) => {
     const $wrapper = $(e.target).parent();
     const html = $wrapper[0].innerHTML;
@@ -386,19 +385,19 @@ function initCreateNewFormatLink(){
       e.preventDefault();
 
       const namedFormat = {};
-      if ($form.find('input[name = "id"]').val() !== ''){
+      if ($form.find('input[name = "id"]').val() !== '') {
         namedFormat.id = $form.find('input[name = "id"]').val();
       }
-      if ($form.find('input[name = "name"]').val() !== ''){
+      if ($form.find('input[name = "name"]').val() !== '') {
         namedFormat.name = $form.find('input[name = "name"]').val();
       }
-      if ($form.find('input[name = "format"]').val() !== ''){
+      if ($form.find('input[name = "format"]').val() !== '') {
         namedFormat.format = $form.find('input[name = "format"]').val();
       }
-      if ($form.find('input[name = "public"]').is(':checked')){
-        namedFormat['public'] = true;
+      if ($form.find('input[name = "public"]').is(':checked')) {
+        namedFormat.public = true;
       } else {
-        namedFormat['public'] = false;
+        namedFormat.public = false;
       }
 
       try {
@@ -407,22 +406,22 @@ function initCreateNewFormatLink(){
         const data = await postFormat(namedFormat);
 
         $form
-        .find('div.aui-message')
-        .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-format')))
-        .css('display', 'block')
-        .removeClass()
-        .addClass('aui-message aui-message-success fadeout');
+          .find('div.aui-message')
+          .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-format')))
+          .css('display', 'block')
+          .removeClass()
+          .addClass('aui-message aui-message-success fadeout');
         setTimeout(() => {
-          $form.find('.fadeout').each(function(){
+          $form.find('.fadeout').each(function () {
             $(this).removeClass('fadeout');
             $(this).hide(500);
           });
           setTimeout(() => {
-            if (data.results){
+            if (data.results) {
               const $tr = $(Mesilat.Zabbix.Templates.format({
                 rec: data.results,
                 admin: isAdmin,
-                user: AJS.params.remoteUser
+                user: AJS.params.remoteUser,
               }));
               $('#com-mesilat-zabbix-formats').find('tbody').append($tr);
               $tr.prop('data', data.results);
@@ -433,15 +432,15 @@ function initCreateNewFormatLink(){
             }
           }, 500);
         }, 2000);
-      } catch(err){
+      } catch (err) {
         $form
-        .find('div.aui-message')
-        .html($('<p>').text(err.responseText))
-        .css('display', 'block')
-        .removeClass()
-        .addClass('aui-message aui-message-error fadeout');
+          .find('div.aui-message')
+          .html($('<p>').text(err.responseText))
+          .css('display', 'block')
+          .removeClass()
+          .addClass('aui-message aui-message-error fadeout');
         setTimeout(() => {
-          $form.find('.fadeout').each(function(){
+          $form.find('.fadeout').each(function () {
             $(this).removeClass('fadeout');
             $(this).hide(500);
           });
@@ -458,7 +457,7 @@ function initCreateNewFormatLink(){
     });
   });
 }
-function createEditFormatForm($tr){
+function createEditFormatForm($tr) {
   const rec = $tr.prop('data');
 
   const $tr2 = $(`<tr><td colspan="${($tr.find('td').length)}"><div class="com-mesilat-zabbix-intable-form"></div></td></tr>`).insertBefore($tr);
@@ -469,19 +468,19 @@ function createEditFormatForm($tr){
   $form.find('#com-mesilat-zabbix-formats-save').on('click', async (e) => {
     e.preventDefault();
     const namedFormat = {};
-    if ($form.find('input[name = "id"]').val() !== ''){
+    if ($form.find('input[name = "id"]').val() !== '') {
       namedFormat.id = $form.find('input[name = "id"]').val();
     }
-    if ($form.find('input[name = "name"]').val() !== ''){
+    if ($form.find('input[name = "name"]').val() !== '') {
       namedFormat.name = $form.find('input[name = "name"]').val();
     }
-    if ($form.find('input[name = "format"]').val() !== ''){
+    if ($form.find('input[name = "format"]').val() !== '') {
       namedFormat.format = $form.find('input[name = "format"]').val();
     }
-    if ($form.find('input[name = "public"]').is(':checked')){
-      namedFormat['public'] = true;
+    if ($form.find('input[name = "public"]').is(':checked')) {
+      namedFormat.public = true;
     } else {
-      namedFormat['public'] = false;
+      namedFormat.public = false;
     }
     try {
       $form.spin();
@@ -489,23 +488,23 @@ function createEditFormatForm($tr){
       const data = await postFormat(namedFormat);
 
       $form
-      .find('div.aui-message')
-      .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-format')))
-      .css('display', 'block')
-      .removeClass()
-      .addClass('aui-message aui-message-success fadeout');
+        .find('div.aui-message')
+        .html($('<p>').text(AJS.I18n.getText('com.mesilat.zabbix-plugin.success.save-format')))
+        .css('display', 'block')
+        .removeClass()
+        .addClass('aui-message aui-message-success fadeout');
       setTimeout(() => {
-        $form.find('.fadeout').each(function(){
+        $form.find('.fadeout').each(function () {
           $(this).removeClass('fadeout');
           $(this).hide(500);
         });
         setTimeout(() => {
-          if (data.results){
+          if (data.results) {
             $tr.remove();
             $tr = $(Mesilat.Zabbix.Templates.format({
               rec: data.results,
               admin: isAdmin,
-              user: AJS.params.remoteUser
+              user: AJS.params.remoteUser,
             }));
             $tr2.replaceWith($tr);
             $tr.prop('data', data.results);
@@ -514,15 +513,15 @@ function createEditFormatForm($tr){
           }
         }, 500);
       }, 2000);
-    } catch(err){
+    } catch (err) {
       $form
-      .find('div.aui-message')
-      .html($('<p>').text(err.responseText))
-      .css('display', 'block')
-      .removeClass()
-      .addClass('aui-message aui-message-error fadeout');
+        .find('div.aui-message')
+        .html($('<p>').text(err.responseText))
+        .css('display', 'block')
+        .removeClass()
+        .addClass('aui-message aui-message-error fadeout');
       setTimeout(() => {
-        $form.find('.fadeout').each(function(){
+        $form.find('.fadeout').each(function () {
           $(this).removeClass('fadeout');
           $(this).hide(500);
         });
@@ -539,10 +538,10 @@ function createEditFormatForm($tr){
   });
 }
 
-function init(admin){
+function init(admin) {
   isAdmin = admin;
   console.debug(`zabbix-plugin settings (admin: ${admin})`);
-  $('#com-mesilat-zabbix-servers').each(function(){
+  $('#com-mesilat-zabbix-servers').each(function () {
     initConnectionDescriptorTable($(this));
   });
 

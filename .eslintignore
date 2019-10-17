@@ -1,0 +1,8 @@
+# Ignored folders
+/node_modules/
+
+# Ignored files
+webpack.config.js
+edit.js
+settings.js
+view.js

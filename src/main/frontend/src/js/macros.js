@@ -1,11 +1,9 @@
-import $ from 'jquery';
-
 import { showGraphs } from './macros/graph';
 import { showMaps } from './macros/map';
 import { showItems, showItemsLegacy } from './macros/item';
 import { showTriggers, showTriggersLegacy } from './macros/trigger';
 
-function showAll(){
+function showAll() {
   showGraphs();
   showMaps();
   showItems();

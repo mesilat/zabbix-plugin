@@ -34,6 +34,19 @@ const webpackConfig = {
   module: {
     rules: [
       {
+        test: /\.js$/,
+        exclude: [/node_modules/, /lib/],
+        use: [
+          'babel-loader',
+          {
+            loader: 'eslint-loader',
+            options: {
+              fix: true,
+            },
+          },
+        ],
+      },
+      {
         test: /\.jpe?g$/,
         use: [
           {
@@ -64,7 +77,7 @@ const webpackConfig = {
     path: OUTPUT_PATH,
     filename: '[name].[chunkhash].js',
     chunkFilename: '[name].[chunkhash].js',
-    jsonpFunction: 'atlascampjson',
+    jsonpFunction: 'zabbixPlugin',
   },
   optimization: {
     splitChunks: false,
