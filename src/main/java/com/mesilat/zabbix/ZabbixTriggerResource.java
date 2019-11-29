@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -33,6 +35,56 @@ import org.json.JSONObject;
 
 @Path("/triggers")
 public class ZabbixTriggerResource extends ZabbixResourceBase {
+    private static final String ALL_HOSTS = "__ALL__";
+    
+    @GET
+    @Produces(MediaType.APPLICATION_JSON + "; charset=utf-8")
+    public Response get(
+        @QueryParam("token") String token,
+        @QueryParam("server") Integer server,
+        @QueryParam("host") String host,
+        @QueryParam("host-group") String group,
+        @Context HttpServletRequest request
+    ) {
+        UserKey userKey = getUserManager().getRemoteUserKey(request);
+        if (!TokenService.isValidToken(userKey, token)){
+            return Response.status(Response.Status.FORBIDDEN).entity(getResolver().getText("com.mesilat.zabbix-plugin.error.not-authorized")).build();
+        }
+        if (server == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Required parameter \"server\" is missing").build();
+        }
+
+        try {
+            if (ALL_HOSTS.equals(host)) {
+                ConfluenceUserPreferences preferences = getPreferences(userKey);
+                DateFormatter dateFormatter = getDateFormatter(preferences);
+                ZabbixConnectionDescriptor conn = getConnection(userKey, server);
+                ZabbixClient client = getClient(conn);
+                List<ZabbixTrigger> triggers = client.getTriggers(new DateFormatterImpl(dateFormatter));
+                return Response.ok(toArray(triggers, dateFormatter).toString()).build();
+            } else if (host != null) {
+                ConfluenceUserPreferences preferences = getPreferences(userKey);
+                DateFormatter dateFormatter = getDateFormatter(preferences);
+                ZabbixConnectionDescriptor conn = getConnection(userKey, server);
+                ZabbixClient client = getClient(conn);
+                List<ZabbixTrigger> triggers = client.getTriggersForHost(host, new DateFormatterImpl(dateFormatter));
+                return Response.ok(toArray(triggers, dateFormatter).toString()).build();
+            } else if (group != null) {
+                ConfluenceUserPreferences preferences = getPreferences(userKey);
+                DateFormatter dateFormatter = getDateFormatter(preferences);
+                ZabbixConnectionDescriptor conn = getConnection(userKey, server);
+                ZabbixClient client = getClient(conn);
+                List<ZabbixTrigger> triggers = client.getTriggersForHostGroup(group, new DateFormatterImpl(dateFormatter));
+                return Response.ok(toArray(triggers, dateFormatter).toString()).build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Either parameter \"host\" or \"host-group\" is required").build();
+            }
+        } catch (ZabbixResourceException | ZabbixClientException | JSONException ex) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).build();
+        }
+    }
+
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON + "; charset=utf-8")

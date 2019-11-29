@@ -8,7 +8,6 @@ import Suggestions from 'suggestions';
 // import Autocomplete from './autocomplete';
 
 const DEBUG = true;
-
 export function debug(...args) {
   if (DEBUG) {
     console.debug('ZabbixPlugin', ...args);
@@ -42,7 +41,8 @@ function getHostSelectorParams() {
     }
   }
   return null;
-} function setManadatory($input) {
+}
+function setManadatory($input) {
   $input.closest('div.macro-param-div')
     .find('label').each(function () {
       const $label = $(this);
@@ -147,21 +147,30 @@ export async function setupServerParam(selectedParams) {
   console.debug('zabbix-plugin setupServerParam()');
 }
 export async function setupHostParam(selectedParams, options) {
-  const $input = $('<input type="hidden" class="macro-param-input" id="macro-param-host">');
-  if ('host' in selectedParams) {
-    $input.val(selectedParams.host);
-  }
-  $('#macro-param-host').replaceWith($input);
+  $('#macro-param-host').hide();
+
+  const $input = $('<input type="hidden">');
+  $input.insertAfter($('#macro-param-host'));
 
   function toParams(server, q) {
-    return { server, q };
+    return { server, q, 'include-host-groups': !!(options && options.includeHostGroups) };
   }
   function toResults(data) {
-    return {
-      results: (options && options.enableSelectAll)
-        ? [{ id: '__ALL__', text: AJS.I18n.getText('com.mesilat.zabbix-plugin.zabbix-triggers.allHosts') }].concat(data.results)
-        : data.results,
-    };
+    data.results.forEach((d) => {
+      if (d.group) {
+        d.val = d.text;
+        d.id = `group:${d.text}`;
+      } else /* host */ {
+        d.val = d.id;
+        d.id = `host:${d.id}`;
+      }
+    });
+    data.results.sort((a, b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase()));
+
+    const results = options && options.enableSelectAll
+      ? [{ id: '__ALL__', text: AJS.I18n.getText('com.mesilat.zabbix-plugin.zabbix-triggers.allHosts') }].concat(data.results)
+      : data.results;
+    return { results };
   }
 
   $input.auiSelect2({
@@ -175,20 +184,58 @@ export async function setupHostParam(selectedParams, options) {
     },
     minimumInputLength: 0,
     escapeMarkup: markup => markup,
-    formatResult: d => $('<span>').attr('title', d.text).text(d.text),
+    formatResult: d => $('<span>')
+      .attr('title', d.group ? `${AJS.I18n.getText('com.mesilat.zabbix-plugin.common.hostGroup ')}: ${d.text}` : d.text)
+      .text(d.text),
   });
 
-  $input.on('change', () => setTitle($input, $input.val()));
-  if (selectedParams && 'server' in selectedParams && 'host' in selectedParams) {
-    try {
-      $input.val(selectedParams.host);
-      const host = await getHost(selectedParams.server, selectedParams.host);
-      $input.val(host.id).closest('div.macro-param-div').find('span.select2-chosen').text(host.text);
+  $input.on('change', (e) => {
+    const d = e.added;
+    if (d) {
+      setTitle($input, d.text);
+      if (d.id === '__ALL__') {
+        $('#macro-param-host').val('__ALL__');
+        $('#macro-param-group').val('');
+      } else if (d.group) {
+        $('#macro-param-host').val(d.val);
+        $('#macro-param-group').val(true);
+      } else {
+        $('#macro-param-host').val(d.val);
+        $('#macro-param-group').val('');
+      }
+    }
+  });
+
+  if (selectedParams && 'host' in selectedParams) {
+    if (selectedParams.host === '__ALL__') {
+      $input.val('__ALL__');
+      $input
+        .closest('div.macro-param-div')
+        .find('span.select2-chosen')
+        .text(AJS.I18n.getText('com.mesilat.zabbix-plugin.zabbix-triggers.allHosts'));
+      setTitle($input, AJS.I18n.getText('com.mesilat.zabbix-plugin.zabbix-triggers.allHosts'));
+    } else if (selectedParams.group) {
+      $input.val(`group:${selectedParams.host}`);
+      $input
+        .closest('div.macro-param-div')
+        .find('span.select2-chosen')
+        .text(selectedParams.host);
       setTitle($input, selectedParams.host);
-    } catch (err) {
-      console.error('zabbix-plugin', err);
+    } else {
+      $input.val(`host:${selectedParams.host}`);
+      try {
+        const host = await getHost(selectedParams.server, selectedParams.host);
+        $input
+          .closest('div.macro-param-div')
+          .find('span.select2-chosen')
+          .text(host.text);
+        setTitle($input, host.text);
+      } catch (err) {
+        console.error('zabbix-plugin', err);
+      }
     }
   }
+
   setManadatory($input);
 }
 export async function setupGraphParam(selectedParams) {

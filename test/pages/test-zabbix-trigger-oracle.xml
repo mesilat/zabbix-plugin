@@ -1,0 +1,7 @@
+<p>
+  <ac:structured-macro ac:name="zabbix-triggers" ac:schema-version="1">
+    <ac:parameter ac:name="server">${ZABBIX_SERVER_ID}</ac:parameter>
+    <ac:parameter ac:name="host">Oracle</ac:parameter>
+    <ac:parameter ac:name="group">true</ac:parameter>
+  </ac:structured-macro>
+</p>

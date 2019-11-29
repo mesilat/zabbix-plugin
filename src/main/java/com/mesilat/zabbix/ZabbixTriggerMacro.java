@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ZabbixTriggerMacro extends ZabbixMacroBase implements Macro {
+    private static final String ALL_HOSTS = "__ALL__";
+
     @Override
     public TokenType getTokenType(Map parameters, String body, RenderContext context) {
         return TokenType.INLINE;
@@ -81,7 +83,15 @@ public class ZabbixTriggerMacro extends ZabbixMacroBase implements Macro {
             try {
                 ZabbixConnectionDescriptor conn = getConnection(userKey, Integer.parseInt(server));
                 ZabbixClient client = getClient(conn);
-                List<ZabbixTrigger> triggers = client.getTriggersForHost(host, new DateFormatterImpl(getDateFormatter(preferences)));
+                List<ZabbixTrigger> triggers;
+                if (ALL_HOSTS.equals(host)) {
+                    triggers = client.getTriggers(new DateFormatterImpl(getDateFormatter(preferences)));
+                } else if ("true".equals(params.get("group"))) {
+                    triggers = client.getTriggersForHostGroup(host, new DateFormatterImpl(getDateFormatter(preferences)));
+                } else {
+                    triggers = client.getTriggersForHost(host, new DateFormatterImpl(getDateFormatter(preferences)));
+                }
+
                 if (triggers.isEmpty()) {
                     return renderFromSoy("Mesilat.Zabbix.Templates.zabbixAllGood.soy", new HashMap<>());
                 } else {
@@ -96,6 +106,9 @@ public class ZabbixTriggerMacro extends ZabbixMacroBase implements Macro {
             Map<String,Object> map = new HashMap<>();
             map.put("server", server);
             map.put("host", host);
+            if (params.containsKey("group") && "true".equals(params.get("group"))) {
+                map.put("group", true);
+            }
             map.put("licensed", isLicensed());
             map.put("token", TokenService.createToken(userKey));
 

@@ -25,6 +25,11 @@ function initAll() {
       initTrigger(selectedParamsCopy, macroSelected);
       return selectedParams;
     },
+    fields: {
+      string: {
+        group: param => AJS.MacroBrowser.ParameterFields._hidden(param, {}),
+      },
+    },
   });
   AJS.MacroBrowser.setMacroJsOverride('zabbix-map', {
     beforeParamsSet: (selectedParams, macroSelected) => {

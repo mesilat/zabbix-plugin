@@ -1,0 +1,28 @@
+/**
+ * This test suit will start a new Confluence instance
+ */
+
+import { CONFLUENCE_BASE } from './.settings';
+import { delay, waitForConfluenceToStart, waitForConfluenceToStop } from './components/util';
+import loginForm from './components/login-form';
+import skipOnboarding from './components/skip-onboarding';
+import createPage from './components/create-page';
+
+describe('Sample Plugin tests', () => {
+  let server;
+  beforeAll(async () => {
+    server = await waitForConfluenceToStart();
+    await page.goto(CONFLUENCE_BASE);
+  }, 300000);
+  beforeEach(async () => {
+    jest.setTimeout(60000);
+  });
+  afterAll(async () => {
+    await waitForConfluenceToStop(server);
+  }, 10000);
+
+  it('a user can login using form', loginForm);
+  it('skip onboarding dialog', skipOnboarding);
+
+  // Create test space, load test pages and execute some tests
+});

@@ -142,6 +142,7 @@
         <parameters>
             <parameter name="server" type="string"/>
             <parameter name="host" type="string"/>
+            <parameter name="group" type="string"/>
         </parameters>
     </xhtml-macro>﻿
     <xhtml-macro name="zabbix-map" class="com.mesilat.zabbix.ZabbixMapMacro2" key="zabbix-map" state="enabled" icon="/download/resources/com.mesilat.zabbix-plugin/images/pluginLogo.png">﻿

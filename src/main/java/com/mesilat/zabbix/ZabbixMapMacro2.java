@@ -53,6 +53,10 @@ public class ZabbixMapMacro2 extends ZabbixMacroBase implements Macro {
         return _execute(params, body);
     }
     private String _execute(Map params, String body) throws MacroExecutionException {
+        if (!params.containsKey("server") || !params.containsKey("map")) {
+            throw new MacroExecutionException("Some mandatory parameters are missing");
+        }
+        
         final String server = params.get("server").toString();
         final String map = params.get("map").toString();
         final String severity = params.get("severity") == null? null: params.get("severity").toString();

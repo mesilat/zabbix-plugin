@@ -14,6 +14,8 @@ public class ZabbixTriggerRequest {
     private Integer server;
     @XmlElement
     private String[] hosts;
+    @XmlElement
+    private String[] hostGroups;
 
     public String getToken() {
         return token;
@@ -32,5 +34,11 @@ public class ZabbixTriggerRequest {
     }
     public void setHosts(String[] hosts) {
         this.hosts = hosts;
+    }
+    public String[] getHostGroups() {
+        return hostGroups;
+    }
+    public void setHostGroups(String[] hostGroups) {
+        this.hostGroups = hostGroups;
     }
 }

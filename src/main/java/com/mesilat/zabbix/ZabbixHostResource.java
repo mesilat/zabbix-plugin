@@ -7,6 +7,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.sal.api.user.UserKey;
 import com.atlassian.sal.api.user.UserManager;
 import com.mesilat.zabbix.client.ZabbixClient;
+import com.mesilat.zabbix.client.ZabbixHostGroup;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -23,11 +24,16 @@ import org.json.JSONObject;
 public class ZabbixHostResource extends ZabbixResourceBase {
     @GET
     @Produces(MediaType.APPLICATION_JSON + "; charset=utf-8")
-    public Response get(@QueryParam("server") Integer server, @QueryParam("q") String query, @QueryParam("host") String host, @Context HttpServletRequest request) {
+    public Response get(
+        @QueryParam("server") Integer server,
+        @QueryParam("q") String query,
+        @QueryParam("host") String host,
+        @QueryParam("include-host-groups") Boolean includeHostGroups,
+        @Context HttpServletRequest request) {
         UserKey userKey = getUserManager().getRemoteUserKey(request);
         try {
             if (server == null){
-                return findHosts(query);
+                return findHosts(query, includeHostGroups != null && includeHostGroups);
             } else if (host != null) {
                 ZabbixConnectionDescriptor conn = getConnection(userKey, server);
                 if (conn == null){
@@ -39,7 +45,7 @@ public class ZabbixHostResource extends ZabbixResourceBase {
                 if (conn == null){
                     return Response.status(Response.Status.NOT_FOUND).build();
                 }
-                return findHosts(conn, query);
+                return findHosts(conn, query, includeHostGroups != null && includeHostGroups);
             }
         } catch(ZabbixResourceException ex) {
             return Response.status(ex.getStatus()).entity(ex.getMessage()).build();
@@ -62,7 +68,7 @@ public class ZabbixHostResource extends ZabbixResourceBase {
             throw new ZabbixResourceException(Response.Status.INTERNAL_SERVER_ERROR, ex.getMessage());
         }
     }
-    public Response findHosts(ZabbixConnectionDescriptor conn, String query) throws ZabbixResourceException {
+    public Response findHosts(ZabbixConnectionDescriptor conn, String query, boolean includeHostGroups) throws ZabbixResourceException {
         LOGGER.debug("Lookup Zabbix hosts for query: " + query);
         try {
             ZabbixClient client = getClient(conn);
@@ -73,6 +79,20 @@ public class ZabbixHostResource extends ZabbixResourceBase {
                 obj.put("text", host.getName());
                 arr.put(obj);
             }
+            if (includeHostGroups) {
+                for (ZabbixHostGroup hostGroup : client.listHostGroups()) {
+                    if (query == null ||
+                        query.isEmpty() ||
+                        hostGroup.getName().toUpperCase().contains(query.toUpperCase())
+                    ) {
+                        JSONObject obj = new JSONObject();
+                        obj.put("id", hostGroup.getGroupId());
+                        obj.put("text", hostGroup.getName());
+                        obj.put("group", true);
+                        arr.put(obj);
+                    }
+                }
+            }
             JSONObject results = new JSONObject();
             results.put("results", arr);
             return Response.ok(results.toString()).build();
@@ -80,16 +100,30 @@ public class ZabbixHostResource extends ZabbixResourceBase {
             throw new ZabbixResourceException(Response.Status.INTERNAL_SERVER_ERROR, ex.getMessage());
         }
     }
-    public Response findHosts(String name) throws ZabbixResourceException {
-        LOGGER.debug("Lookup Zabbix hosts for query: " + name);
+    public Response findHosts(String query, boolean includeHostGroups) throws ZabbixResourceException {
+        LOGGER.debug("Lookup Zabbix hosts for query: " + query);
         try {
             ZabbixClient client = getClient();
             JSONArray arr = new JSONArray();
-            for (ZabbixHost host : client.findHosts(name)) {
+            for (ZabbixHost host : client.findHosts(query)) {
                 JSONObject obj = new JSONObject();
                 obj.put("id", host.getHostId());
                 obj.put("text", host.getName());
                 arr.put(obj);
+            }
+            if (includeHostGroups) {
+                for (ZabbixHostGroup hostGroup : client.listHostGroups()) {
+                    if (query == null ||
+                        query.isEmpty() ||
+                        hostGroup.getName().toUpperCase().contains(query.toUpperCase())
+                    ) {
+                        JSONObject obj = new JSONObject();
+                        obj.put("id", hostGroup.getGroupId());
+                        obj.put("text", hostGroup.getName());
+                        obj.put("group", true);
+                        arr.put(obj);
+                    }
+                }
             }
             JSONObject results = new JSONObject();
             results.put("results", arr);

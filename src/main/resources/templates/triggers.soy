@@ -12,6 +12,24 @@
 
 
 /**
+* Zabbix Triggers Template
+* @param triggers
+* @param showHostAndGroup
+*/
+{template .zabbixTriggers}
+{if $showHostAndGroup}
+  {call .zabbixTriggersGroup}
+    {param triggers: $triggers /}
+  {/call}
+{else}
+  {call .zabbixTriggersSync}
+    {param triggers: $triggers /}
+  {/call}
+{/if}
+{/template}
+
+
+/**
 * Zabbix Triggers Template (sync)
 * @param triggers
 */
@@ -55,7 +73,7 @@
 * Zabbix Triggers Template (all hosts)
 * @param triggers
 */
-{template .zabbixTriggersAll}
+{template .zabbixTriggersGroup}
 <table class="aui">
 <tbody>
 <thead>
@@ -69,7 +87,7 @@
 </thead>
 <tbody>
     {foreach $trigger in $triggers}
-        {call .zabbixTriggerAllLine}
+        {call .zabbixTriggerGroupLine}
             {param trigger: $trigger/}
         {/call}
     {/foreach}
@@ -82,7 +100,7 @@
 * Zabbix Trigger Line Template (all hosts)
 * @param trigger
 */
-{template .zabbixTriggerAllLine}
+{template .zabbixTriggerGroupLine}
 <tr class="zabbix-trigger-{$trigger.priority}" data-trigger-id="{$trigger.triggerId}">
     <td class="zabbix zabbix-trigger"><span class="{$trigger.iconClass} zabbix-icon"></span> <a href="javascript:0;">{$trigger.description}</a></td>
     <td class="zabbix zabbix-trigger-host">{if isNonnull($trigger.hostName)}{$trigger.hostName}{/if}</td>

@@ -134,11 +134,12 @@
 * Zabbix Triggers Template (async)
 * @param server
 * @param host
+* @param group
 * @param licensed
 * @param token
 */
 {template .zabbixTriggers2}
-<div class="zabbix-triggers2{if not $licensed} zabbix-plugin-not-licensed{/if}" server="{$server}" host="{$host}" token="{$token}">
+<div class="zabbix-triggers2{if not $licensed} zabbix-plugin-not-licensed{/if}" server="{$server}" {if $group}group="{$host}"{else}host="{$host}"{/if} token="{$token}">
 <div class="button-spinner"></div>
 </div>
 {/template}

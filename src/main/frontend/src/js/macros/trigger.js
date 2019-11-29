@@ -6,7 +6,7 @@ import {
   debug,
 } from './general';
 
-async function loadEvents(server, trigger) {
+async function getEvents(server, trigger) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/events`,
     type: 'GET',
@@ -17,21 +17,16 @@ async function loadEvents(server, trigger) {
     dataType: 'json',
   });
 }
-async function loadTriggers(server, triggers) {
+async function getTriggers(data) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/triggers`,
-    type: 'POST',
-    contentType: 'application/json',
-    data: JSON.stringify({
-      token: triggers.elt[0].attr('token'),
-      server,
-      hosts: triggers.obj,
-    }),
-    processData: false,
+    type: 'GET',
+    data,
     dataType: 'json',
-    context: triggers,
+    context: data,
   });
 }
+
 async function loadTriggersLegacy(triggers) {
   return $.ajax({
     url: `${AJS.contextPath()}/rest/zabbix-plugin/1.0/triggers/legacy`,
@@ -55,84 +50,64 @@ function showError($elt, message) {
     .tooltip();
 }
 
-async function showTriggersForServer(server, triggers) {
-  try {
-    const data = await loadTriggers(server, triggers);
-
-    for (let i = 0; i < triggers.elt.length; i++) {
-      const $elt = triggers.elt[i];
-      $elt.spinStop();
-      const trg = data.results[triggers.obj[i]];
-      if (typeof trg !== 'undefined') {
-        let $template;
-        if (trg.length === 0) {
-          $template = $(Mesilat.Zabbix.TriggersTemplates.zabbixAllGood({}));
-        } else if ($elt.attr('host') === '__ALL__') {
-          $template = $(Mesilat.Zabbix.TriggersTemplates.zabbixTriggersAll({
-            triggers: trg,
-          }));
-        } else {
-          $template = $(Mesilat.Zabbix.TriggersTemplates.zabbixTriggersSync({
-            triggers: trg,
-          }));
-        }
-        $elt.empty().append($template);
-        if ($elt.hasClass('zabbix-plugin-not-licensed')) {
-          $template = $(Mesilat.Zabbix.GeneralTemplates.notLicensedWarning({}));
-          $elt.append($template);
-        }
-      } else {
-        showError($elt, AJS.I18n.getText('com.mesilat.zabbix-plugin.error.unexpected'));
-      }
-    }
-  } catch (err) {
-    debug('zabbix-plugin triggers', err);
-    triggers.elt.forEach(($elt) => {
-      $elt.spinStop();
-      showError($elt, err.responseText);
-    });
-  }
-}
-
 export function showTriggers() {
-  const triggers = {};
-  $('.zabbix-triggers2').each(function () {
+  $('.zabbix-triggers2').each(async function () {
     const $elt = $(this);
-    const server = $elt.attr('server');
-    const host = $elt.attr('host');
-    if (!(server in triggers)) {
-      triggers[server] = {
-        obj: [],
-        elt: [],
-      };
+    const server = parseInt($elt.attr('server'), 10);
+    const token = $elt.attr('token');
+    const query = { server, token };
+    if ($elt.attr('host')) {
+      query.host = $elt.attr('host');
     }
-    triggers[server].obj.push(host);
-    triggers[server].elt.push($elt);
+    if ($elt.attr('group')) {
+      query['host-group'] = $elt.attr('group');
+    }
+    const showHostAndGroup = query['host-group'] || query.host === '__ALL__';
 
-    $elt.spin();
-    $elt.on('click', 'a', async function (e) {
-      const $a = $(this);
-      if ($a.attr('href') === 'javascript:0;') {
-        e.preventDefault();
-        const trigger = $a.closest('tr').data('trigger-id');
-        if (typeof trigger !== 'undefined') {
-          try {
-            const data = await loadEvents(server, trigger);
-            $a
-              .attr('href', data.results[0].url)
-              .attr('target', '_blank')[0].click();
-          } catch (err) {
-            // TODO: aui flag
-            debug('zabbix-plugin events', err.responseText);
+    try {
+      $elt.spin();
+      const triggers = await getTriggers(query);
+      console.log('showTriggers()', triggers);
+      $elt.empty().append(
+        triggers.length === 0
+          ? $(Mesilat.Zabbix.TriggersTemplates.zabbixAllGood({}))
+          : $(Mesilat.Zabbix.TriggersTemplates.zabbixTriggers({ triggers, showHostAndGroup })),
+      );
+      if ($elt.hasClass('zabbix-plugin-not-licensed')) {
+        $elt.append($(Mesilat.Zabbix.GeneralTemplates.notLicensedWarning({})));
+      }
+
+      $elt.on('click', 'a', async function (e) {
+        const $a = $(this);
+        if ($a.attr('href') === 'javascript:0;') {
+          e.preventDefault();
+
+          const trigger = $a.closest('tr').data('trigger-id');
+          if (typeof trigger !== 'undefined') {
+            try {
+              const events = await getEvents(server, trigger);
+              if (events.results.length === 0) {
+                throw new Error(AJS.I18n.getText('com.mesilat.zabbix-plugin.error.no-events'));
+              }
+              $a
+                .attr('href', events.results[0].url)
+                .attr('target', '_blank')[0].click();
+            } catch (err) {
+              (AJS.flag || window.require('aui/flag'))({
+                type: 'error',
+                title: AJS.I18n.getText('com.mesilat.zabbix-plugin.common.error'),
+                body: err.responseText || err.message,
+              });
+            }
           }
         }
-      }
-    });
-  });
-
-  // Requests per server
-  _.keys(triggers).forEach((server) => {
-    showTriggersForServer(server, triggers[server]);
+      });
+    } catch (err) {
+      debug('::showTriggers()', err);
+      showError($elt, err.responseText);
+    } finally {
+      $elt.spinStop();
+    }
   });
 }
 export async function showTriggersLegacy() {
@@ -184,7 +159,9 @@ export async function showTriggersLegacy() {
     });
   }
 }
-export function initTrigger(selectedParams/* , macroSelected */) {
+
+export async function initTrigger(selectedParams/* , macroSelected */) {
+  // console.log('zabbix-plugin::initTrigger()', selectedParams);
   setupServerParam(selectedParams);
-  setupHostParam(selectedParams, { enableSelectAll: true });
+  setupHostParam(selectedParams, { enableSelectAll: true, includeHostGroups: true });
 }
