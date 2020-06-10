@@ -51,7 +51,7 @@ public class LegacyConfigService implements InitializingBean, DisposableBean, Ru
             try {
                 ao.executeInTransaction(()->{
                     UserProfile admin = userManager.getUserProfile("admin");
-                    int n = ao.count(ZabbixConnectionDescriptor.class, "default = 'Y'");
+                    int n = ao.count(ZabbixConnectionDescriptor.class, "DEFAULT = 'Y'");
                     if (n == 0){
                         LegacyConfig legacyConfig = new LegacyConfig(settings);
                         if (legacyConfig.getUrl() != null){
