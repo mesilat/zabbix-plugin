@@ -3,7 +3,9 @@ package com.mesilat.zabbix;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.confluence.user.AuthenticatedUserThreadLocal;
 import com.atlassian.confluence.user.ConfluenceUser;
+import com.atlassian.confluence.user.UserAccessor;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.sal.api.user.UserManager;
 import com.mesilat.util.StreamUtil;
@@ -42,8 +44,13 @@ import org.springframework.beans.factory.InitializingBean;
 @ExportAsService ({ImageService.class})
 @Named
 public class ImageServiceImpl extends ZabbixResourceBase implements InitializingBean, ImageService {
+    private static final String ANONYMOUS_USER = "zabbix-anonymous";
+
     private final Map<Integer,String> cookies = new HashMap<>();
     private final Map<String,String> versions = new HashMap<>();
+
+    @ComponentImport
+    private final UserAccessor userAccessor;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -58,7 +65,9 @@ public class ImageServiceImpl extends ZabbixResourceBase implements Initializing
         try (CloseableHttpClient client = createHttpClient()){
             ConfluenceUser user = AuthenticatedUserThreadLocal.get();
             if (user == null){
-                throw new ZabbixResourceException(Status.UNAUTHORIZED, "Authentication required");
+                user = userAccessor.getUserByName(ANONYMOUS_USER);
+                if (user == null)
+                    throw new ZabbixResourceException(Status.UNAUTHORIZED, "Authentication required");
             }
             ZabbixConnectionDescriptor conn = getConnection(user.getKey(), Integer.parseInt(server));
             ZabbixClient zc = getClient(conn);
@@ -131,6 +140,10 @@ public class ImageServiceImpl extends ZabbixResourceBase implements Initializing
         LOGGER.debug(String.format("LEGACY: Get Zabbix Graph %s, default server", graphId));
 
         try (CloseableHttpClient client = createHttpClient()){
+            ConfluenceUser user = AuthenticatedUserThreadLocal.get();
+            if (user == null) {
+                throw new ZabbixResourceException(Status.UNAUTHORIZED, "Authentication required");
+            }
             ZabbixConnectionDescriptor conn = getDefaultConnection();
             String cookie = null;
             synchronized(cookies){
@@ -372,7 +385,8 @@ public class ImageServiceImpl extends ZabbixResourceBase implements Initializing
     }
 
     @Inject
-    public ImageServiceImpl(I18nResolver resolver, UserManager userManager, ActiveObjects ao) {
+    public ImageServiceImpl(I18nResolver resolver, UserManager userManager, ActiveObjects ao, UserAccessor userAccessor) {
         super(resolver, userManager, null, null, null, null, ao, null);
+        this.userAccessor = userAccessor;
     }
 }

@@ -1,5 +1,6 @@
 package com.mesilat.zabbix;
 
+import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import com.mesilat.zabbix.client.ZabbixClientException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -14,6 +15,7 @@ public class ImageFileResource {
 
     @GET
     @Produces("image/png")
+    @AnonymousAllowed
     public Response get(@Context HttpServletRequest request) {
         try {
             if (request.getParameter("server") == null){
